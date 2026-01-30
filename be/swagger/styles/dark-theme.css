@@ -1,0 +1,869 @@
+/* ============================================================================
+   Dark Theme CSS - Movie Booking API Documentation
+   Professional dark theme with high contrast mode support
+   Based on GitHub/Stripe/Postman design patterns
+   ============================================================================ */
+
+:root {
+  /* Dark Theme Colors */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-hover: #30363d;
+
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+
+  --border-primary: #30363d;
+  --border-secondary: #21262d;
+
+  --accent-blue: #58a6ff;
+  --accent-green: #3fb950;
+  --accent-yellow: #d29922;
+  --accent-red: #f85149;
+  --accent-purple: #bc8cff;
+
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* High Contrast Mode */
+:root.high-contrast {
+  /* High Contrast Theme Colors */
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #1a1a1a;
+  --bg-hover: #2a2a2a;
+
+  --text-primary: #ffffff;
+  --text-secondary: #d0d0d0;
+  --text-muted: #a0a0a0;
+
+  --border-primary: #404040;
+  --border-secondary: #2a2a2a;
+
+  --accent-blue: #7dbeff;
+  --accent-green: #5fd96a;
+  --accent-yellow: #ffcc44;
+  --accent-red: #ff6b6b;
+  --accent-purple: #d4a6ff;
+
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 1);
+}
+
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+html,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================================
+   SWAGGER UI CORE
+   ============================================================================ */
+
+.swagger-ui {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Hide default topbar */
+.swagger-ui .topbar {
+  display: none;
+}
+
+/* Main container styling */
+.swagger-ui .information-container {
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow);
+}
+
+.swagger-ui .info {
+  margin-top: 0;
+}
+
+.swagger-ui .info .title {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+}
+
+.swagger-ui .info .description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.swagger-ui .info .contact {
+  color: var(--text-secondary);
+  margin-top: 1rem;
+}
+
+.swagger-ui .info .contact a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.swagger-ui .info .contact a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   HTTP METHOD COLORS & ENDPOINT BLOCKS
+   ============================================================================ */
+
+/* Base opblock styling */
+.swagger-ui .opblock {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.swagger-ui .opblock:hover {
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.swagger-ui .opblock-summary {
+  padding: 1rem;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+}
+
+.swagger-ui .opblock-summary-path {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  word-break: break-word;
+  margin-left: 0.5rem;
+}
+
+.swagger-ui .opblock-summary-description {
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.swagger-ui .opblock-summary:hover {
+  background-color: var(--bg-hover);
+}
+
+/* GET - Blue */
+.swagger-ui .opblock-get {
+  background: rgba(88, 166, 255, 0.08);
+  border-color: var(--accent-blue);
+}
+
+.swagger-ui .opblock-get .opblock-summary {
+  border-left: 4px solid var(--accent-blue);
+}
+
+.swagger-ui .opblock-get .opblock-summary-method {
+  background: var(--accent-blue);
+  color: #000;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* POST - Green */
+.swagger-ui .opblock-post {
+  background: rgba(63, 185, 80, 0.08);
+  border-color: var(--accent-green);
+}
+
+.swagger-ui .opblock-post .opblock-summary {
+  border-left: 4px solid var(--accent-green);
+}
+
+.swagger-ui .opblock-post .opblock-summary-method {
+  background: var(--accent-green);
+  color: #000;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* PUT - Yellow */
+.swagger-ui .opblock-put {
+  background: rgba(210, 153, 34, 0.08);
+  border-color: var(--accent-yellow);
+}
+
+.swagger-ui .opblock-put .opblock-summary {
+  border-left: 4px solid var(--accent-yellow);
+}
+
+.swagger-ui .opblock-put .opblock-summary-method {
+  background: var(--accent-yellow);
+  color: #000;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* DELETE - Red */
+.swagger-ui .opblock-delete {
+  background: rgba(248, 81, 73, 0.08);
+  border-color: var(--accent-red);
+}
+
+.swagger-ui .opblock-delete .opblock-summary {
+  border-left: 4px solid var(--accent-red);
+}
+
+.swagger-ui .opblock-delete .opblock-summary-method {
+  background: var(--accent-red);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* PATCH - Purple */
+.swagger-ui .opblock-patch {
+  background: rgba(188, 140, 255, 0.08);
+  border-color: var(--accent-purple);
+}
+
+.swagger-ui .opblock-patch .opblock-summary {
+  border-left: 4px solid var(--accent-purple);
+}
+
+.swagger-ui .opblock-patch .opblock-summary-method {
+  background: var(--accent-purple);
+  color: #000;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* OPTIONS - Gray */
+.swagger-ui .opblock-options .opblock-summary-method {
+  background: var(--text-muted);
+  color: #000;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* Deprecated styling */
+.swagger-ui .opblock.is-open > .opblock-summary {
+  border-color: var(--border-primary);
+}
+
+.swagger-ui .opblock-description {
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+}
+
+/* ============================================================================
+   CODE BLOCKS & SYNTAX HIGHLIGHTING
+   ============================================================================ */
+
+.swagger-ui .highlight-code {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.swagger-ui .microlight {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+/* JSON Syntax Highlighting */
+.swagger-ui .microlight .mtk1 {
+  color: #e6edf3;
+}
+
+.swagger-ui .microlight .mtk4 {
+  color: #79c0ff;
+}
+
+.swagger-ui .microlight .mtk5 {
+  color: #a5d6ff;
+}
+
+.swagger-ui .microlight .mtk6 {
+  color: #ffa657;
+}
+
+.swagger-ui .microlight .mtk8 {
+  color: #ff7b72;
+}
+
+.swagger-ui .microlight .mtk9 {
+  color: #a5d6ff;
+}
+
+/* Copy button styling */
+.swagger-ui .copy-to-clipboard {
+  background: var(--accent-blue);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.swagger-ui .copy-to-clipboard:hover {
+  background: #7dbeff;
+  transform: scale(1.02);
+}
+
+/* ============================================================================
+   BUTTONS & INTERACTIVE ELEMENTS
+   ============================================================================ */
+
+.swagger-ui .btn {
+  background: var(--accent-blue);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.swagger-ui .btn:hover {
+  background: #7dbeff;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+}
+
+.swagger-ui .btn:active {
+  transform: scale(0.98);
+}
+
+.swagger-ui .btn:focus-visible {
+  outline: 3px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Execute button */
+.swagger-ui .btn.execute {
+  background: var(--accent-green);
+  color: #000;
+}
+
+.swagger-ui .btn.execute:hover {
+  background: #5fd96a;
+  box-shadow: 0 4px 12px rgba(63, 185, 80, 0.4);
+}
+
+/* Cancel button */
+.swagger-ui .btn.cancel {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.swagger-ui .btn.cancel:hover {
+  background: #ff6b6b;
+  box-shadow: 0 4px 12px rgba(248, 81, 73, 0.4);
+}
+
+/* Scheme selector button */
+.swagger-ui button.scheme-container__btn {
+  background: var(--accent-blue);
+  color: #000;
+  border-radius: 4px;
+}
+
+.swagger-ui button.scheme-container__btn:hover {
+  background: #7dbeff;
+}
+
+/* Auth button */
+.swagger-ui .authorize {
+  background: var(--accent-blue);
+}
+
+.swagger-ui .authorize:hover {
+  background: #7dbeff;
+}
+
+/* ============================================================================
+   INPUT FIELDS & FORMS
+   ============================================================================ */
+
+.swagger-ui input[type='text'],
+.swagger-ui input[type='password'],
+.swagger-ui input[type='search'],
+.swagger-ui input[type='email'],
+.swagger-ui input[type='number'],
+.swagger-ui textarea,
+.swagger-ui select {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.swagger-ui input[type='text']:focus,
+.swagger-ui input[type='password']:focus,
+.swagger-ui input[type='search']:focus,
+.swagger-ui input[type='email']:focus,
+.swagger-ui input[type='number']:focus,
+.swagger-ui textarea:focus,
+.swagger-ui select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+  background: var(--bg-secondary);
+}
+
+.swagger-ui input::placeholder {
+  color: var(--text-muted);
+}
+
+.swagger-ui textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Form group styling */
+.swagger-ui .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.swagger-ui .form-group label {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.swagger-ui .form-group .description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* ============================================================================
+   RESPONSE SECTIONS
+   ============================================================================ */
+
+.swagger-ui .responses-wrapper {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  border: 1px solid var(--border-primary);
+}
+
+.swagger-ui .response {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.swagger-ui .response:last-child {
+  margin-bottom: 0;
+}
+
+.swagger-ui .response-col_status {
+  color: var(--accent-green);
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.swagger-ui .response-col_description {
+  color: var(--text-secondary);
+}
+
+.swagger-ui .response-col_links {
+  margin-top: 0.5rem;
+}
+
+.swagger-ui .response-col_links a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.swagger-ui .response-col_links a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   TABLES
+   ============================================================================ */
+
+.swagger-ui table {
+  background: var(--bg-secondary);
+  border-collapse: collapse;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.swagger-ui table thead tr {
+  background: var(--bg-tertiary);
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.swagger-ui table th {
+  color: var(--text-primary);
+  font-weight: 700;
+  padding: 1rem;
+  text-align: left;
+  border-right: 1px solid var(--border-primary);
+}
+
+.swagger-ui table th:last-child {
+  border-right: none;
+}
+
+.swagger-ui table td {
+  color: var(--text-secondary);
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-primary);
+}
+
+.swagger-ui table td:last-child {
+  border-right: none;
+}
+
+.swagger-ui table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+/* ============================================================================
+   MODALS & DIALOGS
+   ============================================================================ */
+
+.swagger-ui .dialog-ux {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+}
+
+.swagger-ui .dialog-ux .modal-ux-header {
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 1.5rem;
+  border-radius: 12px 12px 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.swagger-ui .dialog-ux .modal-ux-content {
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+}
+
+.swagger-ui .modal-ux-content .auth-container {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-primary);
+}
+
+.swagger-ui .modal-ux-content label {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Close button in modal */
+.swagger-ui .dialog-ux .close-modal {
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.swagger-ui .dialog-ux .close-modal:hover {
+  color: var(--accent-red);
+  transform: rotate(90deg);
+}
+
+/* ============================================================================
+   TAGS & LABELS
+   ============================================================================ */
+
+.swagger-ui .tag {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.swagger-ui .tag-operation {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Badge styling */
+.swagger-ui .badge {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* ============================================================================
+   SCROLLBARS
+   ============================================================================ */
+
+.swagger-ui ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.swagger-ui ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 6px;
+}
+
+.swagger-ui ::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 6px;
+  border: 2px solid var(--bg-primary);
+  transition: all 0.2s ease;
+}
+
+.swagger-ui ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-primary);
+}
+
+/* Firefox scrollbar */
+.swagger-ui * {
+  scrollbar-color: var(--bg-hover) var(--bg-primary);
+  scrollbar-width: thin;
+}
+
+/* ============================================================================
+   ACCESSIBILITY & FOCUS STATES
+   ============================================================================ */
+
+.swagger-ui *:focus {
+  outline: none;
+}
+
+.swagger-ui *:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.swagger-ui button:focus-visible,
+.swagger-ui a:focus-visible {
+  outline: 3px solid var(--accent-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Keyboard navigation support */
+.swagger-ui a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.swagger-ui a:hover {
+  text-decoration: underline;
+  color: #7dbeff;
+}
+
+.swagger-ui a:active {
+  color: #4a8cdb;
+}
+
+/* ============================================================================
+   LOADING ANIMATION
+   ============================================================================ */
+
+.swagger-ui .loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+.swagger-ui .loading-spinner {
+  border: 4px solid var(--border-primary);
+  border-top: 4px solid var(--accent-blue);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.swagger-ui .text-primary {
+  color: var(--text-primary);
+}
+
+.swagger-ui .text-secondary {
+  color: var(--text-secondary);
+}
+
+.swagger-ui .text-muted {
+  color: var(--text-muted);
+}
+
+.swagger-ui .bg-primary {
+  background: var(--bg-primary);
+}
+
+.swagger-ui .bg-secondary {
+  background: var(--bg-secondary);
+}
+
+.swagger-ui .bg-tertiary {
+  background: var(--bg-tertiary);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .swagger-ui .information-container {
+    padding: 1.5rem;
+  }
+
+  .swagger-ui .opblock-summary {
+    padding: 0.75rem;
+  }
+
+  .swagger-ui .opblock-summary-path {
+    font-size: 0.875rem;
+  }
+
+  .swagger-ui table {
+    font-size: 0.875rem;
+  }
+
+  .swagger-ui table th,
+  .swagger-ui table td {
+    padding: 0.5rem;
+  }
+
+  .swagger-ui .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .swagger-ui .information-container {
+    padding: 1rem;
+  }
+
+  .swagger-ui .opblock-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .swagger-ui .opblock-summary-path {
+    width: 100%;
+    margin: 0.5rem 0 0 0;
+  }
+
+  .swagger-ui .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .swagger-ui .opblock-summary,
+  .swagger-ui .btn {
+    color: #000;
+    background: #fff;
+    border: 1px solid #000;
+  }
+
+  .swagger-ui {
+    background: #fff;
+    color: #000;
+  }
+}

@@ -1,7 +1,9 @@
 import express, { Express } from 'express';
 import cors from 'cors';
+import path from 'path';
 import swaggerUi from 'swagger-ui-express';
-import { specs } from '../swagger/swagger';
+import { swaggerDefinition } from '../swagger/swagger.config';
+import { swaggerUiOptions, getSwaggerHtml } from '../swagger/swagger.ui';
 import { config } from './config';
 import { connectDB } from './config/database';
 import requestLogger from './middlewares/requestLogger';
@@ -48,46 +50,32 @@ app.use(requestLogger);
 connectDB(config.mongoUri);
 
 /**
- * API Documentation
+ * API Documentation - Modern Dark Theme with Theme Toggle
  */
-const swaggerOptions = {
-  swaggerOptions: {
-    persistAuthorization: true,
-    displayOperationId: true,
-    defaultModelsExpandDepth: 1,
-    defaultModelExpandDepth: 1,
-    deepLinking: true,
-    presets: [
-      require('swagger-ui-express').presets.apis,
-      require('swagger-ui-express').SwaggerUIBundle.presets.definitions,
-    ],
-    layout: 'BaseLayout',
-    tryItOutEnabled: true,
-    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch', 'head', 'options', 'trace'],
-    requestInterceptor: (request: any) => {
-      return request;
-    },
-    responseInterceptor: (response: any) => {
-      return response;
-    },
-  },
-  customCss: `
-    .topbar { display: none }
-    .swagger-ui .btn { background-color: #1890ff; color: white; }
-    .swagger-ui .btn.authorize { background-color: #52c41a; }
-    .swagger-ui .model { background-color: #fafafa; }
-    .swagger-ui .model-example { background-color: #f5f5f5; }
-  `,
-  customSiteTitle: 'Movie Ticket Booking API - Interactive Documentation',
-  customfavIcon: 'https://favicon.io/emoji-favicons/movie-camera/',
-  swaggerUIBundleConfig: {
-    presets: ['intl'],
-  },
-};
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
-app.get('/api-docs.json', (req, res) => {
+
+// Serve static assets for Swagger UI (CSS, JS files)
+// Serve local Swagger UI distribution files (scripts/styles)
+app.use('/api-docs', express.static(path.join(__dirname, '..', 'node_modules', 'swagger-ui-dist')));
+app.use('/api-docs', express.static(path.join(__dirname, '../swagger/styles')));
+app.use('/api-docs', express.static(path.join(__dirname, '../swagger')));
+
+// Serve custom Swagger UI with theme toggle
+app.get('/api-docs', (req, res) => {
+  const specUrl = `${config.nodeEnv === 'production' ? '' : 'http://localhost:' + config.port}/api-docs/openapi.json`;
+  res.send(getSwaggerHtml(specUrl));
+});
+
+// OpenAPI JSON Spec endpoint
+app.get('/api-docs/openapi.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.send(specs);
+  res.send(swaggerDefinition);
+});
+
+// Fallback: Legacy Swagger UI endpoint for compatibility
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDefinition, swaggerUiOptions));
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDefinition);
 });
 
 /**
