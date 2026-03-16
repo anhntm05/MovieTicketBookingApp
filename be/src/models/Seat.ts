@@ -1,7 +1,8 @@
 import { Schema, model } from 'mongoose';
 import { ISeat } from '../types';
+import { SEAT_STATUS } from '../utils/constants';
 
-const seatSchema = new Schema<ISeat>(
+const seatSchema = new Schema<any>(
   {
     screen: {
       type: Schema.Types.ObjectId,
@@ -23,9 +24,10 @@ const seatSchema = new Schema<ISeat>(
       enum: ['standard', 'vip', 'premium'],
       default: 'standard',
     },
-    isOccupied: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: [SEAT_STATUS.ACTIVE, SEAT_STATUS.BLOCKED],
+      default: SEAT_STATUS.ACTIVE,
     },
   },
   {

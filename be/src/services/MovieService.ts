@@ -20,6 +20,7 @@ export class MovieService {
       releaseAfter?: Date;
       releaseBefore?: Date;
       title?: string;
+      status?: string;
     }
   ): Promise<{ movies: IMovie[]; total: number; page: number; pages: number }> {
     const query: any = {};
@@ -41,6 +42,9 @@ export class MovieService {
     }
     if (filters?.title) {
       query.title = { $regex: filters.title, $options: 'i' };
+    }
+    if (filters?.status) {
+      query.status = filters.status;
     }
 
     const skip = (page - 1) * limit;
@@ -81,6 +85,16 @@ export class MovieService {
     return movie;
   }
 
+  static async createMovieByActor(movieData: IMovieRequest, actorId: string): Promise<IMovie> {
+    const movie = new Movie({
+      ...movieData,
+      createdBy: actorId,
+      updatedBy: actorId,
+    });
+    await movie.save();
+    return movie;
+  }
+
   /**
    * Update movie
    */
@@ -89,6 +103,32 @@ export class MovieService {
       new: true,
       runValidators: true,
     });
+
+    if (!movie) {
+      const error: any = new Error(ERROR_MESSAGES.MOVIE_NOT_FOUND);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return movie;
+  }
+
+  static async updateMovieByActor(
+    movieId: string,
+    updateData: Partial<IMovieRequest>,
+    actorId: string
+  ): Promise<IMovie> {
+    const movie = await Movie.findByIdAndUpdate(
+      movieId,
+      {
+        ...updateData,
+        updatedBy: actorId,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!movie) {
       const error: any = new Error(ERROR_MESSAGES.MOVIE_NOT_FOUND);

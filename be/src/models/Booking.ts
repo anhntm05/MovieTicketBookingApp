@@ -1,8 +1,15 @@
 import { Schema, model } from 'mongoose';
 import { IBooking } from '../types';
+import { BOOKING_STATUS, PAYMENT_STATUS } from '../utils/constants';
 
-const bookingSchema = new Schema<IBooking>(
+const bookingSchema = new Schema<any>(
   {
+    bookingCode: {
+      type: String,
+      required: [true, 'Please provide a booking code'],
+      unique: true,
+      index: true,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -26,8 +33,31 @@ const bookingSchema = new Schema<IBooking>(
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'cancelled'],
-      default: 'pending',
+      enum: [
+        BOOKING_STATUS.PENDING_PAYMENT,
+        BOOKING_STATUS.CONFIRMED,
+        BOOKING_STATUS.CANCELLED,
+        BOOKING_STATUS.EXPIRED,
+      ],
+      default: BOOKING_STATUS.PENDING_PAYMENT,
+    },
+    paymentStatus: {
+      type: String,
+      enum: [
+        PAYMENT_STATUS.PENDING,
+        PAYMENT_STATUS.COMPLETED,
+        PAYMENT_STATUS.FAILED,
+        PAYMENT_STATUS.REFUNDED,
+      ],
+      default: PAYMENT_STATUS.PENDING,
+    },
+    holdExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
     },
     bookingDate: {
       type: Date,
@@ -41,5 +71,6 @@ const bookingSchema = new Schema<IBooking>(
 
 // Index for user queries
 bookingSchema.index({ user: 1, createdAt: -1 });
+bookingSchema.index({ showtime: 1, status: 1 });
 
 export const Booking = model<IBooking>('Booking', bookingSchema);

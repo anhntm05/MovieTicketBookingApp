@@ -1,7 +1,8 @@
 import { Schema, model } from 'mongoose';
 import { IShowtime } from '../types';
+import { SHOWTIME_STATUS } from '../utils/constants';
 
-const showtimeSchema = new Schema<IShowtime>(
+const showtimeSchema = new Schema<any>(
   {
     movie: {
       type: Schema.Types.ObjectId,
@@ -25,6 +26,19 @@ const showtimeSchema = new Schema<IShowtime>(
       type: Number,
       required: [true, 'Please provide a price'],
       min: 0,
+    },
+    status: {
+      type: String,
+      enum: [SHOWTIME_STATUS.SCHEDULED, SHOWTIME_STATUS.CANCELLED, SHOWTIME_STATUS.COMPLETED],
+      default: SHOWTIME_STATUS.SCHEDULED,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
   },
   {

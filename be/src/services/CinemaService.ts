@@ -17,6 +17,7 @@ export class CinemaService {
     filters?: {
       location?: string;
       name?: string;
+      status?: string;
     }
   ): Promise<{ cinemas: ICinema[]; total: number; page: number; pages: number }> {
     const query: any = {};
@@ -26,6 +27,9 @@ export class CinemaService {
     }
     if (filters?.name) {
       query.name = { $regex: filters.name, $options: 'i' };
+    }
+    if (filters?.status) {
+      query.status = filters.status;
     }
 
     const skip = (page - 1) * limit;

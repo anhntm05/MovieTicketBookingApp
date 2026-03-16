@@ -1,0 +1,20 @@
+[
+  {
+    "_id": { "$oid": "65f800000000000000000001" },
+    "bookingCode": "BKSEED0001",
+    "user": { "$oid": "65f100000000000000000003" },
+    "showtime": { "$oid": "65f600000000000000000001" },
+    "seats": [
+      { "$oid": "65f500000000000000000001" },
+      { "$oid": "65f500000000000000000002" }
+    ],
+    "totalPrice": 200000,
+    "status": "confirmed",
+    "paymentStatus": "completed",
+    "holdExpiresAt": null,
+    "cancelledAt": null,
+    "bookingDate": { "$date": "2026-03-05T12:00:00.000Z" },
+    "createdAt": { "$date": "2026-03-05T12:00:00.000Z" },
+    "updatedAt": { "$date": "2026-03-05T12:05:00.000Z" }
+  }
+]

@@ -1,10 +1,11 @@
 import { Schema, model, Model } from 'mongoose';
 import bcryptjs from 'bcryptjs';
 import { IUser, IUserMethods } from '../types';
+import { USER_ROLES, USER_STATUS } from '../utils/constants';
 
 type UserModel = Model<IUser, {}, IUserMethods>;
 
-const userSchema = new Schema<IUser, UserModel, IUserMethods>(
+const userSchema = new Schema<any, UserModel, IUserMethods>(
   {
     name: {
       type: String,
@@ -33,8 +34,13 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     },
     role: {
       type: String,
-      enum: ['user', 'admin'],
-      default: 'user',
+      enum: [USER_ROLES.CUSTOMER, USER_ROLES.STAFF, USER_ROLES.ADMIN],
+      default: USER_ROLES.CUSTOMER,
+    },
+    status: {
+      type: String,
+      enum: [USER_STATUS.ACTIVE, USER_STATUS.INACTIVE, USER_STATUS.BLOCKED],
+      default: USER_STATUS.ACTIVE,
     },
   },
   {
@@ -44,14 +50,15 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  const doc = this as any;
+  if (!doc.isModified('password')) {
     next();
     return;
   }
 
   try {
     const salt = await bcryptjs.genSalt(10);
-    this.password = await bcryptjs.hash(this.password, salt);
+    doc.password = await bcryptjs.hash(doc.password, salt);
     next();
   } catch (error) {
     next(error as Error);
@@ -60,7 +67,7 @@ userSchema.pre('save', async function (next) {
 
 // Method to compare passwords
 userSchema.methods.matchPassword = async function (enteredPassword: string): Promise<boolean> {
-  return await bcryptjs.compare(enteredPassword, this.password);
+  return await bcryptjs.compare(enteredPassword, (this as any).password);
 };
 
 // Remove password from JSON response

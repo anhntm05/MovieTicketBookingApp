@@ -1,7 +1,8 @@
 import { Schema, model } from 'mongoose';
 import { ICinema } from '../types';
+import { CINEMA_STATUS } from '../utils/constants';
 
-const cinemaSchema = new Schema<ICinema>(
+const cinemaSchema = new Schema<any>(
   {
     name: {
       type: String,
@@ -21,6 +22,11 @@ const cinemaSchema = new Schema<ICinema>(
     facilities: {
       type: [String],
       default: [],
+    },
+    status: {
+      type: String,
+      enum: [CINEMA_STATUS.ACTIVE, CINEMA_STATUS.INACTIVE],
+      default: CINEMA_STATUS.ACTIVE,
     },
   },
   {

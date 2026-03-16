@@ -14,7 +14,7 @@ export class PaymentController {
    */
   static async processPayment(req: Request, res: Response) {
     try {
-      const payment = await PaymentService.processPayment(req.body);
+      const payment = await PaymentService.processPayment(req.user!.userId, req.user!.role, req.body);
 
       const response: IApiResponse<any> = {
         success: true,
@@ -39,7 +39,11 @@ export class PaymentController {
    */
   static async getPaymentByBookingId(req: Request, res: Response) {
     try {
-      const payment = await PaymentService.getPaymentByBookingId(req.params.bookingId);
+      const payment = await PaymentService.getPaymentByBookingId(
+        req.params.bookingId,
+        req.user!.userId,
+        req.user!.role
+      );
 
       const response: IApiResponse<any> = {
         success: true,

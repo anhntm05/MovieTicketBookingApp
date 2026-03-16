@@ -1,0 +1,12 @@
+[
+  {
+    "_id": { "$oid": "65f400000000000000000001" },
+    "cinema": { "$oid": "65f300000000000000000001" },
+    "name": "Hall A",
+    "totalSeats": 6,
+    "seatLayout": { "A": 3, "B": 3 },
+    "status": "active",
+    "createdAt": { "$date": "2026-03-03T09:15:00.000Z" },
+    "updatedAt": { "$date": "2026-03-03T09:15:00.000Z" }
+  }
+]

@@ -20,6 +20,7 @@ export class CinemaController {
       const filters: any = {};
       if (req.query.location) filters.location = req.query.location;
       if (req.query.name) filters.name = req.query.name;
+      filters.status = (req.query.status as string) || 'active';
 
       const result = await CinemaService.getAllCinemas(page, limit, filters);
 

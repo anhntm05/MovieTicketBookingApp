@@ -73,6 +73,24 @@ export const validateUserUpdate = [
     .withMessage('Invalid phone number'),
 ];
 
+export const validateCreateStaff = [
+  ...validateUserRegistration,
+];
+
+export const validateUserRoleUpdate = [
+  body('role')
+    .trim()
+    .isIn(['customer', 'staff', 'admin'])
+    .withMessage('Invalid role'),
+];
+
+export const validateUserStatusUpdate = [
+  body('status')
+    .trim()
+    .isIn(['active', 'inactive', 'blocked'])
+    .withMessage('Invalid status'),
+];
+
 /**
  * Validation rules for Movie
  */
@@ -105,6 +123,10 @@ export const validateMovieCreate = [
   body('releaseDate')
     .isISO8601()
     .withMessage('Invalid release date'),
+  body('status')
+    .optional()
+    .isIn(['draft', 'published', 'archived'])
+    .withMessage('Invalid movie status'),
 ];
 
 /**
@@ -127,6 +149,47 @@ export const validateCinemaCreate = [
     .optional()
     .isArray()
     .withMessage('Facilities must be an array'),
+  body('status')
+    .optional()
+    .isIn(['active', 'inactive'])
+    .withMessage('Invalid cinema status'),
+];
+
+export const validateScreenCreate = [
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Screen name is required'),
+  body('totalSeats')
+    .isInt({ min: 1 })
+    .withMessage('Total seats must be a positive integer'),
+  body('seatLayout')
+    .isObject()
+    .withMessage('Seat layout must be an object'),
+  body('status')
+    .optional()
+    .isIn(['active', 'maintenance'])
+    .withMessage('Invalid screen status'),
+];
+
+export const validateSeatBulkCreate = [
+  body('seats')
+    .isArray({ min: 1 })
+    .withMessage('Seats must be a non-empty array'),
+  body('seats.*.row')
+    .trim()
+    .notEmpty()
+    .withMessage('Seat row is required'),
+  body('seats.*.number')
+    .isInt({ min: 1 })
+    .withMessage('Seat number must be a positive integer'),
+  body('seats.*.type')
+    .isIn(['standard', 'vip', 'premium'])
+    .withMessage('Invalid seat type'),
+  body('seats.*.status')
+    .optional()
+    .isIn(['active', 'blocked'])
+    .withMessage('Invalid seat status'),
 ];
 
 /**
@@ -154,6 +217,10 @@ export const validateShowtimeCreate = [
   body('price')
     .isFloat({ min: 0 })
     .withMessage('Price must be a positive number'),
+  body('status')
+    .optional()
+    .isIn(['scheduled', 'cancelled', 'completed'])
+    .withMessage('Invalid showtime status'),
 ];
 
 /**
@@ -181,6 +248,24 @@ export const validateBookingCreate = [
     .withMessage('Invalid seat IDs'),
 ];
 
+export const validateBookingHold = [
+  body('showtime')
+    .trim()
+    .notEmpty()
+    .withMessage('Showtime is required')
+    .isMongoId()
+    .withMessage('Invalid showtime ID'),
+  body('seats')
+    .isArray({ min: 1 })
+    .withMessage('Seats must be an array with at least one seat')
+    .custom((value) => Array.isArray(value) && value.every((seat: string) => /^[0-9a-f]{24}$/i.test(seat)))
+    .withMessage('Invalid seat IDs'),
+  body('expiryMinutes')
+    .optional()
+    .isInt({ min: 1, max: 30 })
+    .withMessage('Expiry minutes must be between 1 and 30'),
+];
+
 /**
  * Validation rules for Payment
  */
@@ -202,14 +287,61 @@ export const validatePaymentProcess = [
     .withMessage('Invalid payment method'),
 ];
 
+export const validateCommentCreate = [
+  body('movie')
+    .trim()
+    .notEmpty()
+    .withMessage('Movie is required')
+    .isMongoId()
+    .withMessage('Invalid movie ID'),
+  body('booking')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid booking ID'),
+  body('rating')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+  body('content')
+    .trim()
+    .notEmpty()
+    .withMessage('Comment content is required')
+    .isLength({ min: 3, max: 1000 })
+    .withMessage('Comment content must be between 3 and 1000 characters'),
+];
+
+export const validateCommentReply = [
+  body('content')
+    .trim()
+    .notEmpty()
+    .withMessage('Reply content is required')
+    .isLength({ min: 2, max: 1000 })
+    .withMessage('Reply content must be between 2 and 1000 characters'),
+];
+
+export const validateCommentStatusUpdate = [
+  body('status')
+    .trim()
+    .isIn(['approved', 'hidden'])
+    .withMessage('Invalid comment status'),
+];
+
 export default {
   validationHandler,
   validateUserRegistration,
   validateUserLogin,
   validateUserUpdate,
+  validateCreateStaff,
+  validateUserRoleUpdate,
+  validateUserStatusUpdate,
   validateMovieCreate,
   validateCinemaCreate,
+  validateScreenCreate,
+  validateSeatBulkCreate,
   validateShowtimeCreate,
   validateBookingCreate,
+  validateBookingHold,
   validatePaymentProcess,
+  validateCommentCreate,
+  validateCommentReply,
+  validateCommentStatusUpdate,
 };

@@ -22,6 +22,7 @@ export class MovieController {
       if (req.query.minRating) filters.minRating = parseFloat(req.query.minRating as string);
       if (req.query.maxRating) filters.maxRating = parseFloat(req.query.maxRating as string);
       if (req.query.title) filters.title = req.query.title;
+      filters.status = (req.query.status as string) || 'published';
 
       const result = await MovieService.getAllMovies(page, limit, filters);
 
@@ -79,7 +80,7 @@ export class MovieController {
    */
   static async createMovie(req: Request, res: Response) {
     try {
-      const movie = await MovieService.createMovie(req.body);
+      const movie = await MovieService.createMovieByActor(req.body, req.user!.userId);
 
       const response: IApiResponse<any> = {
         success: true,
@@ -104,7 +105,7 @@ export class MovieController {
    */
   static async updateMovie(req: Request, res: Response) {
     try {
-      const movie = await MovieService.updateMovie(req.params.id, req.body);
+      const movie = await MovieService.updateMovieByActor(req.params.id, req.body, req.user!.userId);
 
       const response: IApiResponse<any> = {
         success: true,

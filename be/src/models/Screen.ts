@@ -1,7 +1,8 @@
 import { Schema, model } from 'mongoose';
 import { IScreen } from '../types';
+import { SCREEN_STATUS } from '../utils/constants';
 
-const screenSchema = new Schema<IScreen>(
+const screenSchema = new Schema<any>(
   {
     cinema: {
       type: Schema.Types.ObjectId,
@@ -21,6 +22,11 @@ const screenSchema = new Schema<IScreen>(
     seatLayout: {
       type: Schema.Types.Mixed,
       default: {},
+    },
+    status: {
+      type: String,
+      enum: [SCREEN_STATUS.ACTIVE, SCREEN_STATUS.MAINTENANCE],
+      default: SCREEN_STATUS.ACTIVE,
     },
   },
   {

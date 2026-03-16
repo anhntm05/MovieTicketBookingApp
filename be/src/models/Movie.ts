@@ -1,7 +1,8 @@
 import { Schema, model } from 'mongoose';
 import { IMovie } from '../types';
+import { MOVIE_STATUS } from '../utils/constants';
 
-const movieSchema = new Schema<IMovie>(
+const movieSchema = new Schema<any>(
   {
     title: {
       type: String,
@@ -37,6 +38,19 @@ const movieSchema = new Schema<IMovie>(
     releaseDate: {
       type: Date,
       required: [true, 'Please provide a release date'],
+    },
+    status: {
+      type: String,
+      enum: [MOVIE_STATUS.DRAFT, MOVIE_STATUS.PUBLISHED, MOVIE_STATUS.ARCHIVED],
+      default: MOVIE_STATUS.PUBLISHED,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
   },
   {

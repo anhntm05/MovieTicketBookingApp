@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { HTTP_STATUS, SUCCESS_MESSAGES } from '../utils/constants';
 import { IApiResponse } from '../types';
 import BookingService from '../services/BookingService';
-import SeatService from '../services/SeatService';
 import logger from '../utils/logger';
 
 /**
@@ -41,7 +40,7 @@ export class BookingController {
    */
   static async getBookingById(req: Request, res: Response) {
     try {
-      const booking = await BookingService.getBookingById(req.params.id);
+      const booking = await BookingService.getBookingById(req.params.id, req.user!.userId, req.user!.role);
 
       const response: IApiResponse<any> = {
         success: true,
@@ -62,7 +61,7 @@ export class BookingController {
   }
 
   /**
-   * Get user bookings - GET /api/bookings/user/:userId
+   * Get user bookings - GET /api/bookings/me
    */
   static async getUserBookings(req: Request, res: Response) {
     try {
@@ -101,7 +100,7 @@ export class BookingController {
    */
   static async cancelBooking(req: Request, res: Response) {
     try {
-      const booking = await BookingService.cancelBooking(req.params.id);
+      const booking = await BookingService.cancelBooking(req.params.id, req.user!.userId, req.user!.role);
 
       const response: IApiResponse<any> = {
         success: true,
@@ -127,13 +126,11 @@ export class BookingController {
   static async holdSeats(req: Request, res: Response) {
     try {
       const userId = req.user?.userId;
-      const { seatIds, expiryMinutes } = req.body;
-
-      const holds = await SeatService.holdSeats(userId!, seatIds, expiryMinutes);
+      const holds = await BookingService.holdSeats(userId!, req.body);
 
       const response: IApiResponse<any> = {
         success: true,
-        message: 'Seats held successfully',
+        message: SUCCESS_MESSAGES.SEATS_HELD,
         data: holds,
       };
 

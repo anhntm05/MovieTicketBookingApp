@@ -1,0 +1,8 @@
+[
+  { "_id": { "$oid": "65f500000000000000000001" }, "screen": { "$oid": "65f400000000000000000001" }, "row": "A", "number": 1, "type": "standard", "status": "active", "createdAt": { "$date": "2026-03-03T09:20:00.000Z" }, "updatedAt": { "$date": "2026-03-03T09:20:00.000Z" } },
+  { "_id": { "$oid": "65f500000000000000000002" }, "screen": { "$oid": "65f400000000000000000001" }, "row": "A", "number": 2, "type": "standard", "status": "active", "createdAt": { "$date": "2026-03-03T09:20:00.000Z" }, "updatedAt": { "$date": "2026-03-03T09:20:00.000Z" } },
+  { "_id": { "$oid": "65f500000000000000000003" }, "screen": { "$oid": "65f400000000000000000001" }, "row": "A", "number": 3, "type": "vip", "status": "active", "createdAt": { "$date": "2026-03-03T09:20:00.000Z" }, "updatedAt": { "$date": "2026-03-03T09:20:00.000Z" } },
+  { "_id": { "$oid": "65f500000000000000000004" }, "screen": { "$oid": "65f400000000000000000001" }, "row": "B", "number": 1, "type": "standard", "status": "active", "createdAt": { "$date": "2026-03-03T09:20:00.000Z" }, "updatedAt": { "$date": "2026-03-03T09:20:00.000Z" } },
+  { "_id": { "$oid": "65f500000000000000000005" }, "screen": { "$oid": "65f400000000000000000001" }, "row": "B", "number": 2, "type": "vip", "status": "active", "createdAt": { "$date": "2026-03-03T09:20:00.000Z" }, "updatedAt": { "$date": "2026-03-03T09:20:00.000Z" } },
+  { "_id": { "$oid": "65f500000000000000000006" }, "screen": { "$oid": "65f400000000000000000001" }, "row": "B", "number": 3, "type": "premium", "status": "active", "createdAt": { "$date": "2026-03-03T09:20:00.000Z" }, "updatedAt": { "$date": "2026-03-03T09:20:00.000Z" } }
+]

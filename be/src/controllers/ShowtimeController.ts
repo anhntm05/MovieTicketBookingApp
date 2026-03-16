@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { HTTP_STATUS, SUCCESS_MESSAGES } from '../utils/constants';
 import { IApiResponse } from '../types';
 import ShowtimeService from '../services/ShowtimeService';
-import { Seat } from '../models/Seat';
 import logger from '../utils/logger';
 
 /**
@@ -23,6 +22,7 @@ export class ShowtimeController {
       if (req.query.cinema) filters.cinema = req.query.cinema;
       if (req.query.startDate) filters.startDate = new Date(req.query.startDate as string);
       if (req.query.endDate) filters.endDate = new Date(req.query.endDate as string);
+      filters.status = (req.query.status as string) || 'scheduled';
 
       const result = await ShowtimeService.getAllShowtimes(page, limit, filters);
 
@@ -80,7 +80,7 @@ export class ShowtimeController {
    */
   static async createShowtime(req: Request, res: Response) {
     try {
-      const showtime = await ShowtimeService.createShowtime(req.body);
+      const showtime = await ShowtimeService.createShowtime(req.body, req.user?.userId);
 
       const response: IApiResponse<any> = {
         success: true,
@@ -105,7 +105,7 @@ export class ShowtimeController {
    */
   static async updateShowtime(req: Request, res: Response) {
     try {
-      const showtime = await ShowtimeService.updateShowtime(req.params.id, req.body);
+      const showtime = await ShowtimeService.updateShowtime(req.params.id, req.body, req.user?.userId);
 
       const response: IApiResponse<any> = {
         success: true,
@@ -154,12 +154,7 @@ export class ShowtimeController {
    */
   static async getAvailableSeats(req: Request, res: Response) {
     try {
-      const { showtimeId } = req.params;
-
-      // Get all seats for the screen associated with this showtime
-      const showtime = await ShowtimeService.getShowtimeById(showtimeId);
-
-      const seats = await Seat.find({ screen: showtime.screen, isOccupied: false });
+      const seats = await ShowtimeService.getAvailableSeats(req.params.showtimeId);
 
       const response: IApiResponse<any> = {
         success: true,

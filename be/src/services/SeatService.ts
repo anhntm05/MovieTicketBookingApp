@@ -1,7 +1,6 @@
 import { Seat } from '../models/Seat';
-import { SeatHold } from '../models/SeatHold';
 import { ISeat, ISeatRequest, ISeatHold } from '../types';
-import { ERROR_MESSAGES, PAGINATION, SEAT_HOLD_EXPIRY_MINUTES } from '../utils/constants';
+import { ERROR_MESSAGES, PAGINATION, SEAT_STATUS } from '../utils/constants';
 
 /**
  * Seat Service - Handles seat related business logic
@@ -36,23 +35,7 @@ export class SeatService {
    * Get available seats (not occupied and not on hold)
    */
   static async getAvailableSeats(screenId: string): Promise<ISeat[]> {
-    // Get all occupied seats
-    const occupiedSeats = await Seat.find({
-      screen: screenId,
-      isOccupied: true,
-    });
-
-    const occupiedSeatIds = new Set(occupiedSeats.map((s) => s._id!.toString()));
-
-    // Get all held seats
-    const heldSeats = await SeatHold.find({});
-    const heldSeatIds = new Set(heldSeats.map((s) => s.seat.toString()));
-
-    // Get all seats and filter available ones
-    const allSeats = await Seat.find({ screen: screenId });
-    return allSeats.filter(
-      (seat) => !occupiedSeatIds.has(seat._id!.toString()) && !heldSeatIds.has(seat._id!.toString())
-    );
+    return Seat.find({ screen: screenId, status: SEAT_STATUS.ACTIVE }).sort({ row: 1, number: 1 });
   }
 
   /**
@@ -65,7 +48,7 @@ export class SeatService {
     }));
 
     const seats = await Seat.insertMany(seatsToCreate);
-    return seats;
+    return seats as unknown as ISeat[];
   }
 
   /**
@@ -74,10 +57,9 @@ export class SeatService {
   static async holdSeats(
     userId: string,
     seatIds: string[],
-    expiryMinutes: number = SEAT_HOLD_EXPIRY_MINUTES
+    expiryMinutes: number = 15
   ): Promise<ISeatHold[]> {
-    // Check if seats are available
-    const seats = await Seat.find({ _id: { $in: seatIds } });
+    const seats = await Seat.find({ _id: { $in: seatIds }, status: SEAT_STATUS.ACTIVE });
 
     if (seats.length !== seatIds.length) {
       const error: any = new Error(ERROR_MESSAGES.SEAT_NOT_FOUND);
@@ -85,40 +67,32 @@ export class SeatService {
       throw error;
     }
 
-    // Remove existing holds for these seats
-    await SeatHold.deleteMany({ seat: { $in: seatIds } });
-
-    // Create new holds
-    const holds = await SeatHold.insertMany(
-      seatIds.map((seatId) => ({
-        seat: seatId,
-        user: userId,
-        expiresAt: new Date(Date.now() + expiryMinutes * 60 * 1000),
-      }))
-    );
-
-    return holds;
+    return seatIds.map((seatId) => ({
+      seat: seatId,
+      user: userId,
+      expiresAt: new Date(Date.now() + expiryMinutes * 60 * 1000),
+    })) as ISeatHold[];
   }
 
   /**
    * Release seat holds
    */
   static async releaseSeatHolds(seatIds: string[]): Promise<void> {
-    await SeatHold.deleteMany({ seat: { $in: seatIds } });
+    void seatIds;
   }
 
   /**
    * Mark seats as occupied
    */
   static async markSeatsAsOccupied(seatIds: string[]): Promise<void> {
-    await Seat.updateMany({ _id: { $in: seatIds } }, { isOccupied: true });
+    await Seat.updateMany({ _id: { $in: seatIds } }, { status: SEAT_STATUS.BLOCKED });
   }
 
   /**
    * Mark seats as available
    */
   static async markSeatsAsAvailable(seatIds: string[]): Promise<void> {
-    await Seat.updateMany({ _id: { $in: seatIds } }, { isOccupied: false });
+    await Seat.updateMany({ _id: { $in: seatIds } }, { status: SEAT_STATUS.ACTIVE });
   }
 
   /**
