@@ -1,0 +1,12 @@
+[
+  {
+    "_id": { "$oid": "65f300000000000000000001" },
+    "name": "Downtown Cinema",
+    "location": "District 1",
+    "address": "1 Example Street, Ho Chi Minh City",
+    "facilities": ["Parking", "Snack Bar", "Wheelchair Access"],
+    "status": "active",
+    "createdAt": { "$date": "2026-03-03T09:00:00.000Z" },
+    "updatedAt": { "$date": "2026-03-03T09:00:00.000Z" }
+  }
+]

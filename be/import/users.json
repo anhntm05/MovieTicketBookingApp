@@ -1,0 +1,46 @@
+[
+  {
+    "_id": { "$oid": "65f100000000000000000001" },
+    "name": "System Admin",
+    "email": "admin@example.com",
+    "password": "$2a$10$T/8Q3fX3z1r75kE1QUAMw.S6v9Tir51SeGtK2oWd55LiAdxS5.anm",
+    "phone": "0909000001",
+    "role": "admin",
+    "status": "active",
+    "createdAt": { "$date": "2026-03-01T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-03-01T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "65f100000000000000000002" },
+    "name": "Cinema Staff",
+    "email": "staff@example.com",
+    "password": "$2a$10$8rJ9a81YUNKKa73FGKZIUuPvwV3xaJU1uaoTt/YPTSUWyo2yZWVtm",
+    "phone": "0909000002",
+    "role": "staff",
+    "status": "active",
+    "createdAt": { "$date": "2026-03-01T08:05:00.000Z" },
+    "updatedAt": { "$date": "2026-03-01T08:05:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "65f100000000000000000003" },
+    "name": "Customer One",
+    "email": "customer.one@example.com",
+    "password": "$2a$10$Ji8vHgAISp9o9EsdIn/d4uPw3Q5pCBzGpRzDiTBOz0URNYUjH0Zqa",
+    "phone": "0909000003",
+    "role": "customer",
+    "status": "active",
+    "createdAt": { "$date": "2026-03-01T08:10:00.000Z" },
+    "updatedAt": { "$date": "2026-03-01T08:10:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "65f100000000000000000004" },
+    "name": "Customer Two",
+    "email": "customer.two@example.com",
+    "password": "$2a$10$gh5r1ox9iETI03MlCy3hHefUPDLdcBGZQ8uVtN0Iawe2Y2IXiwS4G",
+    "phone": "0909000004",
+    "role": "customer",
+    "status": "active",
+    "createdAt": { "$date": "2026-03-01T08:15:00.000Z" },
+    "updatedAt": { "$date": "2026-03-01T08:15:00.000Z" }
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "_id": { "$oid": "65fa00000000000000000001" },
+    "movie": { "$oid": "65f200000000000000000001" },
+    "user": { "$oid": "65f100000000000000000003" },
+    "booking": { "$oid": "65f800000000000000000001" },
+    "rating": 5,
+    "content": "Great pacing and clean visuals.",
+    "status": "approved",
+    "replies": [
+      {
+        "_id": { "$oid": "65fa00000000000000000011" },
+        "user": { "$oid": "65f100000000000000000002" },
+        "role": "staff",
+        "content": "Thanks for your review.",
+        "createdAt": { "$date": "2026-03-05T13:00:00.000Z" }
+      }
+    ],
+    "createdAt": { "$date": "2026-03-05T12:30:00.000Z" },
+    "updatedAt": { "$date": "2026-03-05T13:00:00.000Z" }
+  }
+]

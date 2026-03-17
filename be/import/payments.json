@@ -1,0 +1,15 @@
+[
+  {
+    "_id": { "$oid": "65f900000000000000000001" },
+    "booking": { "$oid": "65f800000000000000000001" },
+    "amount": 200000,
+    "method": "credit_card",
+    "status": "completed",
+    "transactionId": "TXN-SEED-0001",
+    "gatewayReference": "GW-SEED-0001",
+    "paidAt": { "$date": "2026-03-05T12:05:00.000Z" },
+    "refundedAt": null,
+    "createdAt": { "$date": "2026-03-05T12:05:00.000Z" },
+    "updatedAt": { "$date": "2026-03-05T12:05:00.000Z" }
+  }
+]
