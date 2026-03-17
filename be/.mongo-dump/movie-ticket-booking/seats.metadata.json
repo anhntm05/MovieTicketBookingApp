@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"screen":{"$numberInt":"1"},"row":{"$numberInt":"1"},"number":{"$numberInt":"1"}},"name":"screen_1_row_1_number_1","background":true,"unique":true}],"uuid":"f54441d04178408cadcb5b3e87b67ec0","collectionName":"seats","type":"collection"}

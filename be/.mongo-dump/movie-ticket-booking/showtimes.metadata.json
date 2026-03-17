@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"movie":{"$numberInt":"1"},"screen":{"$numberInt":"1"},"startTime":{"$numberInt":"1"}},"name":"movie_1_screen_1_startTime_1","background":true}],"uuid":"9662caf9459a4777b8823bfc3cea11ed","collectionName":"showtimes","type":"collection"}
