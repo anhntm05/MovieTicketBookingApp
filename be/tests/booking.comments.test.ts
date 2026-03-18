@@ -74,6 +74,16 @@ describe('Booking, payment, and comment flows', () => {
     expect(paymentResponse.status).toBe(201);
     expect(paymentResponse.body.data.status).toBe('completed');
 
+    const ticketDetailResponse = await request(app)
+      .get(`/api/bookings/${bookingResponse.body.data._id}/ticket-detail`)
+      .set(authHeader(customerOne));
+    expect(ticketDetailResponse.status).toBe(200);
+    expect(ticketDetailResponse.body.data.bookingId).toBe(bookingResponse.body.data._id);
+    expect(ticketDetailResponse.body.data.schedule.theater).toBe('Seed Cinema');
+    expect(ticketDetailResponse.body.data.seats).toHaveLength(2);
+    expect(ticketDetailResponse.body.data.summary.ticketSubtotal).toBe(200000);
+    expect(ticketDetailResponse.body.data.qrCodeValue).toMatch(/^TXN-/);
+
     const bookingHistoryResponse = await request(app).get('/api/bookings/me').set(authHeader(customerOne));
     expect(bookingHistoryResponse.status).toBe(200);
     expect(bookingHistoryResponse.body.data).toHaveLength(1);

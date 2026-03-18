@@ -16,13 +16,15 @@ export class ShowtimeController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string | undefined;
 
       const filters: any = {};
       if (req.query.movie) filters.movie = req.query.movie;
       if (req.query.cinema) filters.cinema = req.query.cinema;
       if (req.query.startDate) filters.startDate = new Date(req.query.startDate as string);
       if (req.query.endDate) filters.endDate = new Date(req.query.endDate as string);
-      filters.status = (req.query.status as string) || 'scheduled';
+      if (!status) filters.status = 'scheduled';
+      else if (status !== 'all') filters.status = status;
 
       const result = await ShowtimeService.getAllShowtimes(page, limit, filters);
 
