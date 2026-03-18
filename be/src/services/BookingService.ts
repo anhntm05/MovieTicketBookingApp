@@ -1,6 +1,8 @@
 import { Booking } from '../models/Booking';
+import { Payment } from '../models/Payment';
 import { Showtime } from '../models/Showtime';
-import { IBooking, IBookingRequest, UserRole } from '../types';
+import { ShowtimeSeat } from '../models/ShowtimeSeat';
+import { IBooking, IBookingRequest, ITicketDetail, UserRole } from '../types';
 import {
   BOOKING_STATUS,
   ERROR_MESSAGES,
@@ -13,6 +15,24 @@ import {
 import ShowtimeSeatService from './ShowtimeSeatService';
 
 export class BookingService {
+  private static readonly bookingPopulate = [
+    {
+      path: 'showtime',
+      populate: [
+        { path: 'movie', select: 'title poster description duration genre rating releaseDate status' },
+        {
+          path: 'screen',
+          select: 'name cinema totalSeats status',
+          populate: {
+            path: 'cinema',
+            select: 'name location address facilities status',
+          },
+        },
+      ],
+    },
+    { path: 'seats', select: 'row number type status screen' },
+  ];
+
   static async getAllBookings(
     page: number = PAGINATION.DEFAULT_PAGE,
     limit: number = PAGINATION.DEFAULT_LIMIT,
@@ -29,11 +49,7 @@ export class BookingService {
     const skip = (page - 1) * limit;
     const bookings = await Booking.find(query)
       .populate('user', 'name email phone')
-      .populate({
-        path: 'showtime',
-        populate: [{ path: 'movie', select: 'title poster' }, { path: 'screen', select: 'name cinema' }],
-      })
-      .populate('seats')
+      .populate(this.bookingPopulate)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -51,11 +67,7 @@ export class BookingService {
   static async getBookingById(bookingId: string, requesterId: string, role: UserRole): Promise<any> {
     const booking = await Booking.findById(bookingId)
       .populate('user', 'name email phone')
-      .populate({
-        path: 'showtime',
-        populate: [{ path: 'movie', select: 'title poster' }, { path: 'screen', select: 'name cinema' }],
-      })
-      .populate('seats');
+      .populate(this.bookingPopulate);
 
     if (!booking) {
       const error: any = new Error(ERROR_MESSAGES.BOOKING_NOT_FOUND);
@@ -76,11 +88,7 @@ export class BookingService {
   ): Promise<{ bookings: any[]; total: number; page: number; pages: number }> {
     const skip = (page - 1) * limit;
     const bookings = await Booking.find({ user: userId })
-      .populate({
-        path: 'showtime',
-        populate: [{ path: 'movie', select: 'title poster' }, { path: 'screen', select: 'name cinema' }],
-      })
-      .populate('seats')
+      .populate(this.bookingPopulate)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -154,6 +162,105 @@ export class BookingService {
     );
 
     return booking;
+  }
+
+  static async getTicketDetail(
+    bookingId: string,
+    requesterId: string,
+    role: UserRole
+  ): Promise<ITicketDetail> {
+    const booking = await Booking.findById(bookingId).populate(this.bookingPopulate);
+
+    if (!booking) {
+      const error: any = new Error(ERROR_MESSAGES.BOOKING_NOT_FOUND);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await this.expireBookingIfNeeded(booking);
+    this.assertBookingAccess(booking, requesterId, role);
+
+    const payment = await Payment.findOne({ booking: booking._id }).sort({ createdAt: -1 });
+    const bookedShowtimeSeats = await ShowtimeSeat.find({
+      showtime: booking.showtime,
+      booking: booking._id,
+    }).select('price seat');
+    const showtime = booking.showtime as any;
+    const screen = showtime?.screen as any;
+    const cinema = screen?.cinema as any;
+    const movie = showtime?.movie as any;
+    const seats = Array.isArray(booking.seats)
+      ? [...booking.seats]
+          .map((seat: any) => ({
+            id: seat?._id?.toString?.() || seat?.id?.toString?.() || '',
+            row: String(seat?.row || ''),
+            number: Number(seat?.number || 0),
+            type: seat?.type || 'standard',
+            label: `${seat?.row || ''}${seat?.number || ''}`,
+          }))
+          .sort((a, b) => {
+            if (a.row === b.row) {
+              return a.number - b.number;
+            }
+
+            return a.row.localeCompare(b.row);
+          })
+      : [];
+
+    const concessions = Array.isArray(booking.concessions)
+      ? booking.concessions.map((item: any) => ({
+          name: String(item?.name || ''),
+          note: String(item?.note || ''),
+          qty: Number(item?.qty || 0),
+          unitPrice: Number(item?.unitPrice || 0),
+          totalPrice: Number(item?.totalPrice || Number(item?.qty || 0) * Number(item?.unitPrice || 0)),
+        }))
+      : [];
+
+    const ticketSubtotal =
+      bookedShowtimeSeats.length > 0
+        ? bookedShowtimeSeats.reduce((sum, item: any) => sum + Number(item.price || 0), 0)
+        : Number(showtime?.price || 0) * seats.length;
+    const concessionsSubtotal = concessions.reduce(
+      (sum, item) => sum + Number(item.totalPrice || item.qty * item.unitPrice || 0),
+      0
+    );
+    const totalAmount = Number(booking.totalPrice || 0);
+    const serviceFee = Math.max(totalAmount - ticketSubtotal - concessionsSubtotal, 0);
+
+    return {
+      bookingId: booking._id!.toString(),
+      bookingCode: String(booking.bookingCode || ''),
+      status: booking.status,
+      paymentStatus: booking.paymentStatus,
+      paymentMethod: payment?.method,
+      transactionId: payment?.transactionId,
+      qrCodeValue: payment?.transactionId || booking.bookingCode,
+      bookingDate: booking.bookingDate,
+      movie: {
+        id: movie?._id?.toString?.() || '',
+        title: String(movie?.title || ''),
+        poster: String(movie?.poster || ''),
+        duration: Number(movie?.duration || 0),
+        genre: Array.isArray(movie?.genre) ? movie.genre.map(String) : [],
+      },
+      schedule: {
+        startTime: showtime?.startTime,
+        theater: String(cinema?.name || ''),
+        hall: String(screen?.name || ''),
+        cinemaLocation: String(cinema?.location || ''),
+        cinemaAddress: String(cinema?.address || ''),
+      },
+      seats,
+      concessions,
+      summary: {
+        ticketCount: seats.length,
+        ticketSubtotal,
+        concessionsSubtotal,
+        serviceFee,
+        totalAmount,
+      },
+    };
   }
 
   static async holdSeats(

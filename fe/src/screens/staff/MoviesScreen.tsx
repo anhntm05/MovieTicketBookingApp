@@ -11,10 +11,14 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../api/client';
+import { normalizeMovie, unwrapApiData } from '../../api/transformers';
 import { Movie } from '../../types/models';
 import { theme } from '../../constants/theme';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+
+const DEFAULT_POSTER_URL = 'https://placehold.co/400x600/png';
+const DEFAULT_TRAILER_URL = 'https://example.com/trailer';
 
 export const MoviesScreen = () => {
   const queryClient = useQueryClient();
@@ -30,8 +34,8 @@ export const MoviesScreen = () => {
   const { data: movies, isLoading } = useQuery<Movie[]>({
     queryKey: ['staff-movies'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/movies');
-      return data;
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/movies?status=all'));
+      return data.map(normalizeMovie);
     },
   });
 
@@ -86,9 +90,12 @@ export const MoviesScreen = () => {
       title,
       description,
       duration: parseInt(duration, 10),
-      posterUrl,
-      releaseDate: new Date().toISOString(), // Simplified for demo
-      status: 'PUBLISHED',
+      genre: ['General'],
+      rating: editingMovie?.rating || 8,
+      poster: posterUrl || editingMovie?.posterUrl || DEFAULT_POSTER_URL,
+      trailer: editingMovie?.trailerUrl || DEFAULT_TRAILER_URL,
+      releaseDate: editingMovie?.releaseDate || new Date().toISOString(),
+      status: 'published',
     };
 
     if (editingMovie) {

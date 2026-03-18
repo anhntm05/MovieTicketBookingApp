@@ -8,7 +8,9 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../../api/client';
+import { normalizeCinema, unwrapApiData } from '../../api/transformers';
 import { Cinema } from '../../types/models';
 import { theme } from '../../constants/theme';
 
@@ -16,9 +18,8 @@ export const CinemasScreen = () => {
   const { data: cinemas, isLoading, isRefetching, refetch } = useQuery<Cinema[]>({
     queryKey: ['cinemas'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/cinemas');
-      // Only show active cinemas to customers typically
-      return data.filter((cinema: Cinema) => cinema.status === 'ACTIVE');
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/cinemas?status=active'));
+      return data.map(normalizeCinema);
     },
   });
 
@@ -31,16 +32,19 @@ export const CinemasScreen = () => {
 
   if (isLoading && !isRefetching) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <SafeAreaView edges={['top']} style={styles.screen}>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top']} style={styles.screen}>
       <Text style={styles.headerTitle}>Our Cinemas</Text>
       <FlatList
+        style={styles.list}
         data={cinemas}
         keyExtractor={(item) => item.id}
         renderItem={renderCinema}
@@ -56,26 +60,29 @@ export const CinemasScreen = () => {
           <Text style={styles.emptyText}>No cinemas found.</Text>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    paddingTop: theme.spacing.xl,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  list: {
+    flex: 1,
+  },
   headerTitle: {
     fontSize: theme.typography.sizes.xl,
     fontWeight: 'bold',
     color: theme.colors.text,
     paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.xl,
     marginBottom: theme.spacing.md,
   },
   listContainer: {

@@ -24,12 +24,13 @@ interface Props {
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !phone || !password) {
       Alert.alert('Error', 'Please fill all required fields');
       return;
     }
@@ -42,9 +43,10 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       await apiClient.post('/auth/register', {
-        fullName,
+        name: fullName,
         email,
         password,
+        phone,
       });
       
       Alert.alert('Success', 'Account created successfully! Please login.', [
@@ -86,6 +88,14 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+        />
+
+        <Input
+          label="Phone Number"
+          placeholder="Enter your phone number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
 
         <Input

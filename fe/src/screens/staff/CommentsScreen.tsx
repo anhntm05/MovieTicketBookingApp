@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../api/client';
+import { normalizeComment, unwrapApiData } from '../../api/transformers';
 import { Comment } from '../../types/models';
 import { theme } from '../../constants/theme';
 import { Button } from '../../components/Button';
@@ -21,12 +22,11 @@ export const CommentsScreen = () => {
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
   const [replyContent, setReplyContent] = useState('');
 
-  // Let's assume there is an endpoint to fetch all comments for staff to manage
   const { data: comments, isLoading } = useQuery<Comment[]>({
     queryKey: ['manage-comments'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/comments/manage');
-      return data;
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/comments/manage'));
+      return data.map(normalizeComment);
     },
   });
 

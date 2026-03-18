@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../api/client';
+import { normalizeShowtime, unwrapApiData } from '../../api/transformers';
 import { Showtime } from '../../types/models';
 import { theme } from '../../constants/theme';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 
-// Note: For a real app, 'movieId' and 'screenId' would probably be picker dropdowns.
 export const ShowtimesScreen = () => {
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
@@ -29,8 +29,8 @@ export const ShowtimesScreen = () => {
   const { data: showtimes, isLoading } = useQuery<Showtime[]>({
     queryKey: ['staff-showtimes'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/showtimes');
-      return data;
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/showtimes?status=all'));
+      return data.map(normalizeShowtime);
     },
   });
 
@@ -39,6 +39,10 @@ export const ShowtimesScreen = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-showtimes'] });
       setModalVisible(false);
+      setMovieId('');
+      setScreenId('');
+      setPrice('');
+      setStartTime('');
     },
     onError: (err: any) => Alert.alert('Error', err.response?.data?.message || 'Failed to create'),
   });
@@ -55,8 +59,8 @@ export const ShowtimesScreen = () => {
     const dEnd = new Date(dStart.getTime() + 2 * 60 * 60 * 1000);
 
     createMutation.mutate({
-      movieId,
-      screenId,
+      movie: movieId,
+      screen: screenId,
       price: parseFloat(price),
       startTime: dStart.toISOString(),
       endTime: dEnd.toISOString(),

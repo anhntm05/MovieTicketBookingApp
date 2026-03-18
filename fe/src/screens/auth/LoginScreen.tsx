@@ -36,13 +36,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       const response = await apiClient.post('/auth/login', { email, password });
-      
-      const { token, user } = response.data;
-      if (token && user) {
-        // This will trigger the global state update and navigate automatically
-        console.log('Login success', response.data);
-        await setAuth(token, user);
+      const { token, user } = response.data?.data ?? {};
+
+      if (!token || !user) {
+        throw new Error('Invalid login response');
       }
+
+      await setAuth(token, user);
     } catch (error: any) {
       console.error('Login error', error);
       Alert.alert(

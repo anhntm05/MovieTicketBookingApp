@@ -173,6 +173,7 @@ export interface IBooking {
   user: Types.ObjectId | string;
   showtime: Types.ObjectId | string;
   seats: string[];
+  concessions?: IBookingConcession[];
   totalPrice: number;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
@@ -186,6 +187,54 @@ export interface IBooking {
 export interface IBookingRequest {
   showtime: string;
   seats: string[];
+}
+
+export interface IBookingConcession {
+  name: string;
+  note?: string;
+  qty: number;
+  unitPrice: number;
+  totalPrice?: number;
+}
+
+export interface ITicketDetail {
+  bookingId: string;
+  bookingCode: string;
+  status: BookingStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  transactionId?: string;
+  qrCodeValue: string;
+  bookingDate?: Date;
+  movie: {
+    id: string;
+    title: string;
+    poster?: string;
+    duration?: number;
+    genre?: string[];
+  };
+  schedule: {
+    startTime?: Date;
+    theater: string;
+    hall: string;
+    cinemaLocation?: string;
+    cinemaAddress?: string;
+  };
+  seats: Array<{
+    id: string;
+    row: string;
+    number: number;
+    type: SeatType;
+    label: string;
+  }>;
+  concessions: IBookingConcession[];
+  summary: {
+    ticketCount: number;
+    ticketSubtotal: number;
+    concessionsSubtotal: number;
+    serviceFee: number;
+    totalAmount: number;
+  };
 }
 
 export interface IPayment {

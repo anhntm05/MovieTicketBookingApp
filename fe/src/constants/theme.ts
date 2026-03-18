@@ -1,13 +1,13 @@
 export const theme = {
   colors: {
-    primary: '#E50914', // A vibrant red for movie apps
-    primaryDark: '#B80710',
-    background: '#121212', // Dark mode default
-    surface: '#1E1E1E',   // Card backgrounds
-    surfaceLight: '#2C2C2C',
+    primary: '#f90680', // The vibrant neon pink from your design
+    primaryDark: '#c20464',
+    background: '#0f0a12', // The deep dark purple/black background
+    surface: '#1a141e',   // Card and section backgrounds
+    surfaceLight: '#251d2a',
     text: '#FFFFFF',
-    textSecondary: '#A0A0A0',
-    border: '#333333',
+    textSecondary: '#666666',
+    border: '#1a141e',
     error: '#CF6679',
     success: '#03DAC6',
     warning: '#F2C94C',
@@ -16,10 +16,10 @@ export const theme = {
     transparent: 'transparent',
     
     // Seat states
-    seatAvailable: '#333333',
-    seatSelected: '#E50914',
-    seatHeld: '#F2C94C',
-    seatBooked: '#444444',
+    seatAvailable: '#666666',
+    seatSelected: '#f90680',
+    seatHeld: '#333333',
+    seatBooked: '#333333',
   },
   spacing: {
     xs: 4,
@@ -31,9 +31,9 @@ export const theme = {
   },
   typography: {
     fontFamilies: {
-      regular: 'System', // Typically defaults to Roboto on Android, San Francisco on iOS
-      medium: 'System',
-      bold: 'System',
+      regular: 'SpaceGrotesk_400Regular',
+      medium: 'SpaceGrotesk_500Medium',
+      bold: 'SpaceGrotesk_700Bold',
     },
     sizes: {
       xs: 12,
@@ -53,14 +53,14 @@ export const theme = {
   },
   shadows: {
     small: {
-      shadowColor: '#000',
+      shadowColor: '#f90680',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.15,
       shadowRadius: 4,
       elevation: 2,
     },
     medium: {
-      shadowColor: '#000',
+      shadowColor: '#f90680',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,

@@ -16,13 +16,15 @@ export class MovieController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string | undefined;
 
       const filters: any = {};
       if (req.query.genre) filters.genre = req.query.genre;
       if (req.query.minRating) filters.minRating = parseFloat(req.query.minRating as string);
       if (req.query.maxRating) filters.maxRating = parseFloat(req.query.maxRating as string);
       if (req.query.title) filters.title = req.query.title;
-      filters.status = (req.query.status as string) || 'published';
+      if (!status) filters.status = 'published';
+      else if (status !== 'all') filters.status = status;
 
       const result = await MovieService.getAllMovies(page, limit, filters);
 

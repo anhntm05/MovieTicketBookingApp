@@ -1,14 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StaffTabParamList } from '../types/navigation';
-import { View, Text } from 'react-native';
 import { ProfileScreen } from '../screens/auth/ProfileScreen';
+import { MoviesScreen } from '../screens/staff/MoviesScreen';
+import { ShowtimesScreen } from '../screens/staff/ShowtimesScreen';
+import { CommentsScreen } from '../screens/staff/CommentsScreen';
 
 const Tab = createBottomTabNavigator<StaffTabParamList>();
-
-const MoviesScreen = () => <View><Text>Manage Movies</Text></View>;
-const ShowtimesScreen = () => <View><Text>Manage Showtimes</Text></View>;
-const CommentsScreen = () => <View><Text>Manage Comments</Text></View>;
 
 export function StaffTabs() {
   return (

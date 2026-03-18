@@ -8,7 +8,30 @@
       { "$oid": "65f500000000000000000001" },
       { "$oid": "65f500000000000000000002" }
     ],
-    "totalPrice": 200000,
+    "concessions": [
+      {
+        "name": "Large Popcorn",
+        "note": "Buttery delight",
+        "qty": 1,
+        "unitPrice": 25000,
+        "totalPrice": 25000
+      },
+      {
+        "name": "Mineral Water",
+        "note": "500ml Still",
+        "qty": 2,
+        "unitPrice": 10000,
+        "totalPrice": 20000
+      },
+      {
+        "name": "Nacho Supreme",
+        "note": "Extra Jalapeños",
+        "qty": 1,
+        "unitPrice": 32500,
+        "totalPrice": 32500
+      }
+    ],
+    "totalPrice": 280000,
     "status": "confirmed",
     "paymentStatus": "completed",
     "holdExpiresAt": null,

@@ -26,6 +26,34 @@ const bookingSchema = new Schema<any>(
         ref: 'Seat',
       },
     ],
+    concessions: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        note: {
+          type: String,
+          default: '',
+          trim: true,
+        },
+        qty: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+        unitPrice: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        totalPrice: {
+          type: Number,
+          min: 0,
+        },
+      },
+    ],
     totalPrice: {
       type: Number,
       required: [true, 'Please provide a total price'],

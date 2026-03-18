@@ -2,17 +2,13 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { useAuthStore } from '../store/authStore';
-import { CustomerTabs } from './CustomerTabs';
+import { CustomerStack } from './CustomerStack';
 import { StaffTabs } from './StaffTabs';
 import { AdminTabs } from './AdminTabs';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
-
-import { MovieDetailScreen } from '../screens/customer/MovieDetailScreen';
-import { ShowtimeDetailScreen } from '../screens/customer/ShowtimeDetailScreen';
-import { BookingPaymentScreen } from '../screens/customer/BookingPaymentScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -33,19 +29,13 @@ export function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isCustomerOrGuest && (
         <Stack.Group>
-          <Stack.Screen name="CustomerMain" component={CustomerTabs} />
-          <Stack.Screen name="MovieDetail" component={MovieDetailScreen as any} options={{ headerShown: true, title: 'Movie Details', headerBackTitle: 'Back' }} />
-          <Stack.Screen name="ShowtimeDetail" component={ShowtimeDetailScreen as any} options={{ headerShown: true, title: 'Select Seats', headerBackTitle: 'Back' }} />
+          <Stack.Screen name="CustomerMain" component={CustomerStack} />
           
           {!isAuthenticated && (
             <>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
             </>
-          )}
-
-          {isAuthenticated && (
-            <Stack.Screen name="BookingPayment" component={BookingPaymentScreen as any} options={{ headerShown: true, title: 'Payment', headerBackTitle: 'Back' }} />
           )}
         </Stack.Group>
       )}

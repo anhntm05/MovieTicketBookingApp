@@ -13,6 +13,8 @@ Import order:
 9. `payments.json`
 10. `comments.json`
 
+`bookings.json` now includes embedded `concessions` items used by the customer ticket-detail screen, so re-import `bookings.json` and `payments.json` together if you want the sample totals to stay consistent.
+
 Example:
 
 ```powershell

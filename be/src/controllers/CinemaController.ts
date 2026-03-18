@@ -16,11 +16,13 @@ export class CinemaController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string | undefined;
 
       const filters: any = {};
       if (req.query.location) filters.location = req.query.location;
       if (req.query.name) filters.name = req.query.name;
-      filters.status = (req.query.status as string) || 'active';
+      if (!status) filters.status = 'active';
+      else if (status !== 'all') filters.status = status;
 
       const result = await CinemaService.getAllCinemas(page, limit, filters);
 

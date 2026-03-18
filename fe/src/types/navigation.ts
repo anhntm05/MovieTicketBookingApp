@@ -1,12 +1,19 @@
+import { NavigatorScreenParams } from '@react-navigation/native';
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  CustomerMain: undefined;
+  CustomerMain: NavigatorScreenParams<CustomerStackParamList> | undefined;
   StaffMain: undefined;
   AdminMain: undefined;
+};
+
+export type CustomerStackParamList = {
+  Tabs: NavigatorScreenParams<CustomerTabParamList> | undefined;
   MovieDetail: { movieId: string };
-  ShowtimeDetail: { showtimeId: string };
+  SeatSelection: { showtimeId: string };
   BookingPayment: { showtimeId: string; selectedSeatIds: string[] };
+  TicketDetail: { bookingId: string };
 };
 
 export type CustomerTabParamList = {

@@ -61,6 +61,35 @@ export class BookingController {
   }
 
   /**
+   * Get ticket detail by booking ID - GET /api/bookings/:id/ticket-detail
+   */
+  static async getTicketDetail(req: Request, res: Response) {
+    try {
+      const ticketDetail = await BookingService.getTicketDetail(
+        req.params.id,
+        req.user!.userId,
+        req.user!.role
+      );
+
+      const response: IApiResponse<any> = {
+        success: true,
+        message: 'Ticket detail retrieved successfully',
+        data: ticketDetail,
+      };
+
+      res.status(HTTP_STATUS.OK).json(response);
+    } catch (error: any) {
+      logger.error('Get ticket detail error:', error);
+      const statusCode = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+      const response: IApiResponse<null> = {
+        success: false,
+        message: error.message,
+      };
+      res.status(statusCode).json(response);
+    }
+  }
+
+  /**
    * Get user bookings - GET /api/bookings/me
    */
   static async getUserBookings(req: Request, res: Response) {

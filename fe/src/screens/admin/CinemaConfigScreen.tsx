@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, Modal, RefreshControl } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../api/client';
+import { normalizeCinema, unwrapApiData } from '../../api/transformers';
 import { Cinema } from '../../types/models';
 import { theme } from '../../constants/theme';
 import { Button } from '../../components/Button';
@@ -12,34 +13,42 @@ export const CinemaConfigScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
 
-  const { data: cinemas, isLoading } = useQuery<Cinema[]>({
+  const { data: cinemas = [], isLoading, isRefetching, refetch, isError } = useQuery<Cinema[]>({
     queryKey: ['admin-cinemas'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/cinemas');
-      return data;
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/cinemas?status=all&limit=100'));
+      return data.map(normalizeCinema);
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: async (payload: { name: string; location: string; status: 'ACTIVE' }) => {
-      return apiClient.post('/cinemas', payload);
+    mutationFn: async (payload: { name: string; location: string; address: string; facilities: string[]; status: 'active' }) => {
+      const response = await apiClient.post('/cinemas', payload);
+      return normalizeCinema(unwrapApiData(response));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-cinemas'] });
+    onSuccess: async (createdCinema) => {
+      queryClient.setQueryData<Cinema[]>(['admin-cinemas'], (current = []) => {
+        const withoutCreatedCinema = current.filter((cinema) => cinema.id !== createdCinema.id);
+        return [createdCinema, ...withoutCreatedCinema];
+      });
+
+      await refetch();
       setModalVisible(false);
       setName('');
       setLocation('');
+      setAddress('');
     },
     onError: (err: any) => Alert.alert('Error', err.response?.data?.message || 'Failed to create'),
   });
 
   const handleSave = () => {
-    if (!name || !location) {
-      Alert.alert('Error', 'Name and location are required');
+    if (!name || !location || !address) {
+      Alert.alert('Error', 'Name, location, and address are required');
       return;
     }
-    createMutation.mutate({ name, location, status: 'ACTIVE' });
+    createMutation.mutate({ name, location, address, facilities: [], status: 'active' });
   };
 
   const renderItem = ({ item }: { item: Cinema }) => (
@@ -63,12 +72,24 @@ export const CinemaConfigScreen = () => {
 
       {isLoading ? (
         <ActivityIndicator size="large" color={theme.colors.primary} style={{ flex: 1 }} />
+      ) : isError ? (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>Failed to load cinemas.</Text>
+          <Button title="Retry" onPress={() => refetch()} />
+        </View>
       ) : (
         <FlatList
           data={cinemas}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={theme.colors.primary}
+            />
+          }
         />
       )}
 
@@ -79,6 +100,7 @@ export const CinemaConfigScreen = () => {
 
           <Input label="Cinema Name" value={name} onChangeText={setName} />
           <Input label="Location" value={location} onChangeText={setLocation} />
+          <Input label="Address" value={address} onChangeText={setAddress} />
 
           <View style={styles.modalActions}>
             <Button title="Cancel" variant="outline" onPress={() => setModalVisible(false)} style={{ flex: 1, marginRight: 8 }} />
@@ -92,6 +114,12 @@ export const CinemaConfigScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -114,6 +142,7 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   title: { color: theme.colors.text, fontSize: theme.typography.sizes.md, fontWeight: 'bold' },
   subtitle: { color: theme.colors.textSecondary, fontSize: theme.typography.sizes.sm },
+  errorText: { color: theme.colors.error, marginBottom: theme.spacing.md },
   activeBadge: { backgroundColor: theme.colors.success, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   badgeText: { color: theme.colors.surface, fontSize: 10, fontWeight: 'bold' },
   modalContainer: { flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.xl, paddingTop: 60 },

@@ -2,18 +2,27 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../api/client';
+import { unwrapApiData } from '../../api/transformers';
 import { theme } from '../../constants/theme';
+
+type DashboardSummary = {
+  users?: { total?: number };
+  bookings?: { total?: number };
+  payments?: { totalRevenue?: number };
+  movies?: number;
+};
 
 export const DashboardScreen = () => {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      // Mock endpoint for demonstration
+      const dashboard = unwrapApiData<DashboardSummary>(await apiClient.get('/admin/dashboard'));
+
       return {
-        totalRevenue: 15420.50,
-        totalBookings: 342,
-        totalUsers: 1205,
-        activeMovies: 12,
+        totalRevenue: dashboard.payments?.totalRevenue || 0,
+        totalBookings: dashboard.bookings?.total || 0,
+        totalUsers: dashboard.users?.total || 0,
+        activeMovies: dashboard.movies || 0,
       };
     },
   });

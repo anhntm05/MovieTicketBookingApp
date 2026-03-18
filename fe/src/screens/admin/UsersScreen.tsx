@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../api/client';
+import { normalizeUserSummary, unwrapApiData } from '../../api/transformers';
 import { theme } from '../../constants/theme';
 import { Button } from '../../components/Button';
 
-// Mock User type since it's not fully defined in models for Admin view
 type UserData = {
   id: string;
   fullName: string;
@@ -19,14 +19,14 @@ export const UsersScreen = () => {
   const { data: users, isLoading } = useQuery<UserData[]>({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data } = await apiClient.get('/users');
-      return data;
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/admin/users'));
+      return data.map(normalizeUserSummary);
     },
   });
 
   const roleMutation = useMutation({
     mutationFn: async ({ id, role }: { id: string; role: string }) => {
-      return apiClient.put(`/users/${id}/role`, { role });
+      return apiClient.patch(`/admin/users/${id}/role`, { role: role.toLowerCase() });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
     onError: (err: any) => Alert.alert('Error', err.response?.data?.message || 'Failed to update user'),

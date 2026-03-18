@@ -33,6 +33,9 @@ router.get('/me', authenticate, BookingController.getUserBookings);
 // PUT /api/bookings/:id/cancel
 router.put('/:id/cancel', authenticate, BookingController.cancelBooking);
 
+// GET /api/bookings/:id/ticket-detail
+router.get('/:id/ticket-detail', authenticate, BookingController.getTicketDetail);
+
 // GET /api/bookings/:id
 router.get('/:id', authenticate, BookingController.getBookingById);
 

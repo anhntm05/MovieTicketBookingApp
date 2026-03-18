@@ -2,7 +2,7 @@
   {
     "_id": { "$oid": "65f900000000000000000001" },
     "booking": { "$oid": "65f800000000000000000001" },
-    "amount": 200000,
+    "amount": 280000,
     "method": "credit_card",
     "status": "completed",
     "transactionId": "TXN-SEED-0001",
