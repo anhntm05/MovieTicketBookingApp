@@ -1,14 +1,17 @@
-ï»¿import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -29,12 +32,18 @@ const BACKGROUND = '#0f0a12';
 const SURFACE = '#1a141e';
 const MUTED = '#666';
 const MUTED_LIGHT = '#aaa';
+const HERO_MAX_MOVIES = 5;
+const HERO_CARD_GAP = 12;
+const HERO_FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=800';
 
 export const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
+  const { width: windowWidth } = useWindowDimensions();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<HomeCategory>('Now Playing');
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
   const { data: movies = [], isLoading, isError, refetch, isRefetching } = useQuery<Movie[]>({
     queryKey: ['movies'],
@@ -68,6 +77,8 @@ export const HomeScreen = () => {
     });
   }, [movies, normalizedSearch]);
 
+  const heroMovies = useMemo(() => searchedMovies.slice(0, HERO_MAX_MOVIES), [searchedMovies]);
+
   const featuredMovies = useMemo(() => {
     switch (activeCategory) {
       case 'Coming Soon':
@@ -84,7 +95,6 @@ export const HomeScreen = () => {
     }
   }, [activeCategory, now, searchedMovies]);
 
-  const heroMovie = featuredMovies[0] ?? movies[0];
   const filteredCinemas = useMemo(() => {
     if (!normalizedSearch) return cinemas;
 
@@ -99,10 +109,29 @@ export const HomeScreen = () => {
 
   const greetingName = user?.fullName || 'Guest';
   const firstName = greetingName.split(' ')[0] || greetingName;
+  const heroCardWidth = Math.max(windowWidth - 40, 280);
+
+  useEffect(() => {
+    setActiveHeroIndex((currentIndex) => {
+      if (heroMovies.length === 0) return 0;
+      return Math.min(currentIndex, heroMovies.length - 1);
+    });
+  }, [heroMovies.length]);
 
   const formatGenres = (movie?: Movie) => {
     if (!movie?.genre || movie.genre.length === 0) return 'Cinema';
-    return movie.genre.slice(0, 2).join(' â€¢ ');
+    return movie.genre.slice(0, 2).join(' • ');
+  };
+
+  const getHeroBadgeText = (movie: Movie) =>
+    new Date(movie.releaseDate).getTime() > now ? 'COMING SOON' : 'NEWEST DROP';
+
+  const handleHeroScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const slideWidth = heroCardWidth + HERO_CARD_GAP;
+    if (!slideWidth) return;
+
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
+    setActiveHeroIndex(Math.max(0, Math.min(nextIndex, heroMovies.length - 1)));
   };
 
   const renderMoviePoster = (movie: Movie) => (
@@ -169,42 +198,65 @@ export const HomeScreen = () => {
         </View>
 
         <View style={styles.heroContainer}>
-          {heroMovie ? (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate('MovieDetail', { movieId: heroMovie.id })}
-            >
-              <ImageBackground
-                source={{
-                  uri:
-                    heroMovie.posterUrl ||
-                    'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=800',
-                }}
-                style={styles.heroBackground}
-                imageStyle={styles.heroImage}
+          {heroMovies.length > 0 ? (
+            <>
+              <ScrollView
+                horizontal
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToAlignment="start"
+                snapToInterval={heroCardWidth + HERO_CARD_GAP}
+                disableIntervalMomentum
+                onMomentumScrollEnd={handleHeroScrollEnd}
+                contentContainerStyle={styles.heroScrollContent}
               >
-                <LinearGradient
-                  colors={['transparent', 'rgba(15, 10, 18, 0.94)']}
-                  style={styles.heroGradient}
-                >
-                  <View style={styles.heroBadge}>
-                    <Text style={styles.badgeText}>
-                      {activeCategory === 'Coming Soon' ? 'COMING SOON' : 'TRENDING NOW'}
-                    </Text>
-                  </View>
-                  <Text style={styles.heroTitle}>{heroMovie.title}</Text>
-                  <View style={styles.heroMeta}>
-                    <Text style={styles.heroMetaText}>
-                      {formatGenres(heroMovie)} â€¢ {heroMovie.duration}m
-                    </Text>
-                    <View style={styles.ratingContainer}>
-                      <MaterialCommunityIcons name="star" size={16} color={ACCENT} />
-                      <Text style={styles.ratingText}>{(heroMovie.rating ?? 4.5).toFixed(1)}</Text>
-                    </View>
-                  </View>
-                </LinearGradient>
-              </ImageBackground>
-            </TouchableOpacity>
+                {heroMovies.map((movie) => (
+                  <TouchableOpacity
+                    key={movie.id}
+                    activeOpacity={0.9}
+                    style={[styles.heroCard, { width: heroCardWidth }]}
+                    onPress={() => navigation.navigate('MovieDetail', { movieId: movie.id })}
+                  >
+                    <ImageBackground
+                      source={{ uri: movie.posterUrl || HERO_FALLBACK_IMAGE }}
+                      style={styles.heroBackground}
+                      imageStyle={styles.heroImage}
+                    >
+                      <LinearGradient
+                        colors={['transparent', 'rgba(15, 10, 18, 0.94)']}
+                        style={styles.heroGradient}
+                      >
+                        <View style={styles.heroBadge}>
+                          <Text style={styles.badgeText}>{getHeroBadgeText(movie)}</Text>
+                        </View>
+                        <Text style={styles.heroTitle} numberOfLines={2}>
+                          {movie.title}
+                        </Text>
+                        <View style={styles.heroMeta}>
+                          <Text style={styles.heroMetaText}>
+                            {formatGenres(movie)} • {movie.duration}m
+                          </Text>
+                          <View style={styles.ratingContainer}>
+                            <MaterialCommunityIcons name="star" size={16} color={ACCENT} />
+                            <Text style={styles.ratingText}>{(movie.rating ?? 4.5).toFixed(1)}</Text>
+                          </View>
+                        </View>
+                      </LinearGradient>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.heroPagination}>
+                {heroMovies.map((movie, index) => (
+                  <View
+                    key={movie.id}
+                    style={[styles.heroDot, index === activeHeroIndex && styles.heroDotActive]}
+                  />
+                ))}
+              </View>
+            </>
           ) : (
             <View style={[styles.heroBackground, styles.heroEmpty]}>
               <Text style={styles.emptyText}>No movies available right now.</Text>
@@ -355,6 +407,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 10,
   },
+  heroScrollContent: {
+    paddingRight: HERO_CARD_GAP,
+  },
+  heroCard: {
+    marginRight: HERO_CARD_GAP,
+  },
   heroBackground: {
     height: 350,
     width: '100%',
@@ -418,6 +476,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 4,
+  },
+  heroPagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 14,
+    gap: 8,
+  },
+  heroDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+  },
+  heroDotActive: {
+    width: 22,
+    backgroundColor: ACCENT,
   },
   searchIcon: {
     marginRight: 10,

@@ -127,6 +127,17 @@ export const BookingsScreen = () => {
     return !isUpcomingBooking(booking);
   });
 
+  const openTicketDetail = (bookingId: string) => {
+    const parentNavigation = navigation.getParent();
+
+    if (parentNavigation) {
+      parentNavigation.navigate('TicketDetail', { bookingId });
+      return;
+    }
+
+    navigation.navigate('TicketDetail', { bookingId });
+  };
+
   const renderHeader = () => (
     <>
       <View style={styles.header}>
@@ -187,7 +198,7 @@ export const BookingsScreen = () => {
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.9}
-        onPress={() => navigation.navigate('TicketDetail', { bookingId: item.id })}
+        onPress={() => openTicketDetail(item.id)}
       >
         {movie?.posterUrl ? (
           <Image source={{ uri: movie.posterUrl }} style={styles.poster} />
