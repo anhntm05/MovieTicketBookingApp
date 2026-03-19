@@ -43,6 +43,10 @@ export const theme = {
       xl: 24,
       xxl: 32,
     },
+    pageTitle: {
+      fontSize: 20,
+      fontFamily: 'SpaceGrotesk_700Bold',
+    },
   },
   borderRadius: {
     sm: 4,

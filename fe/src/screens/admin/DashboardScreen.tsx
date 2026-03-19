@@ -84,11 +84,12 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.xl + 20,
     backgroundColor: theme.colors.surface,
     marginBottom: theme.spacing.md,
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: theme.typography.sizes.xxl,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+    ...theme.typography.pageTitle,
+    color: theme.colors.text,
+    textAlign: 'center',
   },
   statsGrid: {
     flexDirection: 'row',

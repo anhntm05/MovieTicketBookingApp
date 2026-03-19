@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomerStackParamList } from '../../types/navigation';
 import apiClient from '../../api/client';
 import { normalizeSeatAvailability, normalizeShowtime, unwrapApiData } from '../../api/transformers';
+import { theme } from '../../constants/theme';
 import { SeatAvailability, Showtime } from '../../types/models';
 import { Button } from '../../components/Button';
 import { useAuthStore } from '../../store/authStore';
@@ -304,9 +305,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
+    ...theme.typography.pageTitle,
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    textAlign: 'center',
   },
   headerSubtitle: {
     color: ACCENT,

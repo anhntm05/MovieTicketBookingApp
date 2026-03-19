@@ -7,6 +7,7 @@ import { MovieDetailScreen } from '../screens/customer/MovieDetailScreen';
 import { SeatSelectionScreen } from '../screens/customer/SeatSelectionScreen';
 import { BookingPaymentScreen } from '../screens/customer/BookingPaymentScreen';
 import { TicketDetailScreen } from '../screens/customer/TicketDetailScreen';
+import { NotificationsScreen } from '../screens/customer/NotificationsScreen';
 
 const Stack = createNativeStackNavigator<CustomerStackParamList>();
 
@@ -24,6 +25,7 @@ export function CustomerStack() {
       <Stack.Screen name="Tabs" component={CustomerTabs} />
       <Stack.Screen name="MovieDetail" component={MovieDetailScreen as any} />
       <Stack.Screen name="SeatSelection" component={SeatSelectionScreen as any} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen as any} />
       {isAuthenticated && (
         <>
           <Stack.Screen name="BookingPayment" component={BookingPaymentScreen as any} />

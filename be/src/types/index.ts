@@ -13,6 +13,7 @@ export type BookingStatus = 'pending_payment' | 'confirmed' | 'cancelled' | 'exp
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'paypal' | 'bank_transfer';
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 export type CommentStatus = 'approved' | 'hidden';
+export type NotificationType = 'comment' | 'booking_confirm' | 'booking_cancel' | 'promo';
 
 export interface IUser {
   name: string;
@@ -287,6 +288,31 @@ export interface ICommentRequest {
 
 export interface ICommentReplyRequest {
   content: string;
+}
+
+export interface INotification {
+  _id?: string;
+  user: Types.ObjectId | string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  movieTitle?: string;
+  actorName?: string;
+  actorAvatarUrl?: string;
+  unread: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface INotificationRequest {
+  user: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  movieTitle?: string;
+  actorName?: string;
+  actorAvatarUrl?: string;
+  unread?: boolean;
 }
 
 export interface IApiResponse<T> {

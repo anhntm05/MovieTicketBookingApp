@@ -130,7 +130,7 @@ export const BookingsScreen = () => {
   const renderHeader = () => (
     <>
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.headerAction}
           activeOpacity={0.8}
           onPress={() => {
@@ -143,9 +143,9 @@ export const BookingsScreen = () => {
           }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Booking History</Text>
-        <View style={styles.headerSpacer} />
+        {/* <View style={styles.headerSpacer} /> */}
       </View>
 
       <View style={styles.tabContainer}>
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 20,
@@ -339,10 +339,10 @@ const styles = StyleSheet.create({
     width: 24,
   },
   headerTitle: {
+    ...theme.typography.pageTitle,
     color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
+    textAlign: 'center',
   },
   tabContainer: {
     flexDirection: 'row',

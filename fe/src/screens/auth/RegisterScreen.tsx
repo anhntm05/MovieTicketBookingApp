@@ -143,16 +143,19 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: theme.spacing.xl,
+    alignItems: 'center',
   },
   title: {
-    fontSize: theme.typography.sizes.xxl,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+    ...theme.typography.pageTitle,
+    color: theme.colors.text,
     marginBottom: theme.spacing.xs,
+    textAlign: 'center',
+    fontFamily: theme.typography.fontFamilies.bold,
   },
   subtitle: {
     fontSize: theme.typography.sizes.md,
     color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   button: {
     marginTop: theme.spacing.lg,

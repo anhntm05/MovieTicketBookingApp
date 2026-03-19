@@ -29,7 +29,7 @@ export class CinemaService {
       query.name = { $regex: filters.name, $options: 'i' };
     }
     if (filters?.status) {
-      query.status = filters.status;
+      query.status = { $regex: `^${filters.status}$`, $options: 'i' };
     }
 
     const skip = (page - 1) * limit;

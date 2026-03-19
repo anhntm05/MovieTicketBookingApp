@@ -22,6 +22,7 @@ import {
   normalizeShowtime,
   unwrapApiData,
 } from '../../api/transformers';
+import { theme } from '../../constants/theme';
 import { SeatAvailability, Showtime } from '../../types/models';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'BookingPayment'>;
@@ -154,11 +155,12 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.headerAction} onPress={() => navigation.goBack()} activeOpacity={0.8}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isPaid ? 'Booking Confirmed' : 'Complete Payment'}</Text>
         <TouchableOpacity
+          style={styles.headerAction}
           onPress={() =>
             Alert.alert('Order Details', `Booking #${bookingCode}\nAmount: $${totalAmount.toFixed(2)}`)
           }
@@ -341,10 +343,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
+  headerAction: {
+    width: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerTitle: {
+    ...theme.typography.pageTitle,
+    flex: 1,
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
+    textAlign: 'center',
   },
   scrollContent: {
     paddingBottom: 40,

@@ -12,6 +12,7 @@ import {
   SHOWTIME_STATUS,
   USER_ROLES,
 } from '../utils/constants';
+import NotificationService from './NotificationService';
 import ShowtimeSeatService from './ShowtimeSeatService';
 
 export class BookingService {
@@ -307,6 +308,12 @@ export class BookingService {
       booking.showtime.toString(),
       booking.seats.map((seat) => seat.toString()),
       booking._id!.toString()
+    );
+
+    const showtime = await Showtime.findById(booking.showtime).populate('movie', 'title');
+    const movieTitle = (showtime as any)?.movie?.title || 'your movie';
+    await NotificationService.createNotification(
+      NotificationService.buildBookingNotification(booking.user.toString(), 'booking_cancel', movieTitle)
     );
 
     return booking;

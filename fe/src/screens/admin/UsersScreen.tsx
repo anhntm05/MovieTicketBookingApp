@@ -90,8 +90,13 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     paddingTop: theme.spacing.xl,
     backgroundColor: theme.colors.surface,
+    alignItems: 'center',
   },
-  headerTitle: { fontSize: theme.typography.sizes.xl, fontWeight: 'bold', color: theme.colors.text },
+  headerTitle: {
+    ...theme.typography.pageTitle,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
   list: { padding: theme.spacing.md },
   card: {
     flexDirection: 'row',

@@ -135,3 +135,15 @@ export interface CommentReply {
   createdAt: string;
   user?: { id: string; fullName: string, role: string };
 }
+
+export interface Notification {
+  id: string;
+  type: 'COMMENT' | 'BOOKING_CONFIRM' | 'BOOKING_CANCEL' | 'PROMO';
+  title: string;
+  message: string;
+  movieTitle?: string;
+  actorName?: string;
+  actorAvatarUrl?: string;
+  unread: boolean;
+  createdAt: string;
+}

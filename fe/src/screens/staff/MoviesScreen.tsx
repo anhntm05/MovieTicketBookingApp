@@ -128,6 +128,7 @@ export const MoviesScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <View style={styles.headerSpacer} />
         <Text style={styles.headerTitle}>Manage Movies</Text>
         <Button title="+ Add Movie" onPress={() => openModal()} style={styles.addButton} />
       </View>
@@ -183,7 +184,13 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.xl,
     backgroundColor: theme.colors.surface,
   },
-  headerTitle: { fontSize: theme.typography.sizes.xl, fontWeight: 'bold', color: theme.colors.text },
+  headerSpacer: { width: 108 },
+  headerTitle: {
+    ...theme.typography.pageTitle,
+    flex: 1,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
   addButton: { paddingHorizontal: theme.spacing.md, height: 40 },
   list: { padding: theme.spacing.md },
   card: {

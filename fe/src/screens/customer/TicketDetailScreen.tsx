@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CustomerStackParamList } from '../../types/navigation';
 import apiClient from '../../api/client';
 import { normalizeTicketDetail, unwrapApiData } from '../../api/transformers';
+import { theme } from '../../constants/theme';
 import { TicketDetail } from '../../types/models';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'TicketDetail'>;
@@ -127,11 +128,11 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.headerAction} onPress={() => navigation.goBack()} activeOpacity={0.8}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Ticket Details</Text>
-        <TouchableOpacity onPress={handleShare} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.headerAction} onPress={handleShare} activeOpacity={0.8}>
           <MaterialCommunityIcons name="share-variant" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -328,10 +329,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
+  headerAction: {
+    width: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerTitle: {
+    ...theme.typography.pageTitle,
+    flex: 1,
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    textAlign: 'center',
   },
   scrollContent: {
     paddingBottom: 40,
