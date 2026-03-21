@@ -9,7 +9,7 @@ interface CustomerLayoutProps {
   contentStyle?: StyleProp<ViewStyle>;
 }
 
-const customerTabs: MainTabName[] = ['Home', 'Cinemas', 'Bookings', 'Notifications', 'Profile'];
+const customerTabs: MainTabName[] = ['Home', 'Cinemas', 'Bookings', 'Profile'];
 
 const isMainTab = (routeName?: string): routeName is MainTabName =>
   customerTabs.includes(routeName as MainTabName);
@@ -43,10 +43,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
   const activeTab = isMainTab(route.name) ? route.name : findActiveTab(navigation.getState());
 
   const handleTabPress = (tabName: MainTabName) => {
-    navigation.navigate('CustomerMain', {
-      screen: 'Tabs',
-      params: { screen: tabName },
-    });
+    navigation.navigate('CustomerMain', { screen: tabName });
   };
 
   return (

@@ -12,18 +12,17 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../api/client';
 import { normalizeNotification, unwrapApiData } from '../../api/transformers';
 import { Notification } from '../../types/models';
-import { CustomerTabParamList } from '../../types/navigation';
+import { CustomerStackParamList } from '../../types/navigation';
 import { theme } from '../../constants/theme';
 import { useAuthStore } from '../../store/authStore';
 import { socketService } from '../../services/socket';
 
-type Props = BottomTabScreenProps<CustomerTabParamList, 'Notifications'>;
+type Props = NativeStackScreenProps<CustomerStackParamList, 'Notifications'>;
 type NotificationTab = 'All' | 'Bookings' | 'Social';
 
 const tabs: NotificationTab[] = ['All', 'Bookings', 'Social'];

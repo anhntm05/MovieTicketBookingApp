@@ -14,13 +14,13 @@ export type CustomerStackParamList = {
   SeatSelection: { showtimeId: string };
   BookingPayment: { showtimeId: string; selectedSeatIds: string[] };
   TicketDetail: { bookingId: string };
+  Notifications: undefined;
 };
 
 export type CustomerTabParamList = {
   Home: undefined;
   Cinemas: undefined;
   Bookings: undefined;
-  Notifications: undefined;
   Profile: undefined;
 };
 

@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 
-export type MainTabName = 'Home' | 'Cinemas' | 'Bookings' | 'Notifications' | 'Profile';
+export type MainTabName = 'Home' | 'Cinemas' | 'Bookings' | 'Profile';
 
 interface MainTabNavigationProps {
   activeTab?: MainTabName;
@@ -14,7 +14,6 @@ const tabs: Array<{ name: MainTabName; label: string; icon: string }> = [
   { name: 'Home', label: 'Home', icon: 'home-variant-outline' },
   { name: 'Cinemas', label: 'Cinemas', icon: 'movie-open-outline' },
   { name: 'Bookings', label: 'Bookings', icon: 'ticket-confirmation-outline' },
-  { name: 'Notifications', label: 'Alerts', icon: 'bell-outline' },
   { name: 'Profile', label: 'Profile', icon: 'account-circle-outline' },
 ];
 
@@ -25,7 +24,7 @@ export const MainTabNavigation: React.FC<MainTabNavigationProps> = ({
   const { isAuthenticated } = useAuthStore();
   const visibleTabs = isAuthenticated
     ? tabs
-    : tabs.filter((tab) => tab.name !== 'Bookings' && tab.name !== 'Notifications');
+    : tabs.filter((tab) => tab.name !== 'Bookings');
 
   return (
     <View style={styles.container}>
@@ -67,7 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#1a141e',
     borderRadius: 24,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -81,13 +80,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 6,
-    minWidth: 0,
   },
   label: {
     color: '#8c8192',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
-    textAlign: 'center',
   },
   labelActive: {
     color: '#f90680',
