@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { CustomerStackParamList, RootStackParamList } from '../../types/navigation';
+import { CustomerTabParamList, RootStackParamList } from '../../types/navigation';
 import { Button } from '../../components/Button';
 import { theme } from '../../constants/theme';
 import { useAuthStore } from '../../store/authStore';
@@ -91,8 +91,11 @@ export const ProfileScreen = () => {
       return;
     }
 
-    const parentNavigation = navigation.getParent<NativeStackNavigationProp<CustomerStackParamList>>();
-    parentNavigation?.navigate('Notifications');
+    const parentNavigation = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
+    parentNavigation?.navigate('CustomerMain', {
+      screen: 'Tabs',
+      params: { screen: 'Notifications' as keyof CustomerTabParamList },
+    });
   };
 
   if (!isAuthenticated) {
@@ -140,7 +143,7 @@ export const ProfileScreen = () => {
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.headerAction}
           activeOpacity={0.85}
           onPress={() => {
@@ -150,9 +153,9 @@ export const ProfileScreen = () => {
           }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerAction} />
+        {/* <View style={styles.headerAction} /> */}
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -283,7 +286,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
   },

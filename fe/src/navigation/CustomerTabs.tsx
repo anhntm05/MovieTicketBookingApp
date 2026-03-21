@@ -7,6 +7,7 @@ import { ProfileScreen } from '../screens/auth/ProfileScreen';
 import { HomeScreen } from '../screens/customer/HomeScreen';
 import { CinemasScreen } from '../screens/customer/CinemasScreen';
 import { BookingsScreen } from '../screens/customer/BookingsScreen';
+import { NotificationsScreen } from '../screens/customer/NotificationsScreen';
 
 const Tab = createBottomTabNavigator<CustomerTabParamList>();
 
@@ -30,6 +31,9 @@ export function CustomerTabs() {
       <Tab.Screen name="Cinemas" component={CinemasScreen} />
       {isAuthenticated && (
         <Tab.Screen name="Bookings" component={BookingsScreen} />
+      )}
+      {isAuthenticated && (
+        <Tab.Screen name="Notifications" component={NotificationsScreen} />
       )}
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

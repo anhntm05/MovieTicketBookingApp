@@ -1,10 +1,22 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
-dotenv.config();
+const nodeEnv = process.env.NODE_ENV || 'development';
+const baseEnvPath = path.resolve(process.cwd(), '.env');
+const envSpecificPath = path.resolve(process.cwd(), `.env.${nodeEnv}`);
+
+if (fs.existsSync(baseEnvPath)) {
+  dotenv.config({ path: baseEnvPath });
+}
+
+if (fs.existsSync(envSpecificPath)) {
+  dotenv.config({ path: envSpecificPath, override: true });
+}
 
 export const config = {
   port: process.env.PORT || 3000,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/movie-ticket-booking',
   jwtSecret: process.env.JWT_SECRET || 'your_jwt_secret_key_here',
   jwtExpiry: process.env.JWT_EXPIRY || '7d',
