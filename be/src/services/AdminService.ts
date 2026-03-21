@@ -57,6 +57,8 @@ export class AdminService {
             $group: {
               _id: '$movie._id',
               title: { $first: '$movie.title' },
+              poster: { $first: '$movie.poster' },
+              genre: { $first: '$movie.genre' },
               bookings: { $sum: 1 },
               revenue: { $sum: '$totalPrice' },
             },
@@ -140,6 +142,8 @@ export class AdminService {
         title: item.title,
         bookings: item.bookings,
         revenue: item.revenue,
+        posterUrl: item.poster,
+        genre: Array.isArray(item.genre) ? item.genre.map(String) : [],
       })),
     };
   }
