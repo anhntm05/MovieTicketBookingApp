@@ -6,6 +6,7 @@ import { User } from '../models/User';
 import { IComment, ICommentRequest } from '../types';
 import { COMMENT_STATUS, ERROR_MESSAGES, PAGINATION } from '../utils/constants';
 import { getIO } from '../socket';
+import NotificationService from './NotificationService';
 
 export class CommentService {
   static async getMovieComments(
@@ -126,6 +127,18 @@ export class CommentService {
       .populate('replies.user', 'name role');
 
     getIO()?.to(`movie:${comment.movie.toString()}`).emit('comments:reply', populatedComment);
+
+    if (comment.user.toString() !== userId) {
+      const movie = await Movie.findById(comment.movie).select('title');
+      await NotificationService.createNotification(
+        NotificationService.buildCommentReplyNotification(
+          comment.user.toString(),
+          String(user.name || 'Someone'),
+          String(movie?.title || 'a movie'),
+          content
+        )
+      );
+    }
 
     return populatedComment as unknown as IComment;
   }
