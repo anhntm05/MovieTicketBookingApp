@@ -358,6 +358,8 @@ export interface IDashboardSummary {
     title: string;
     bookings: number;
     revenue: number;
+    posterUrl?: string;
+    genre?: string[];
   }>;
 }
 
