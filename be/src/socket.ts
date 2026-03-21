@@ -19,6 +19,14 @@ export const initSocket = (server: HttpServer) => {
     socket.on('comments:leave', (movieId: string) => {
       socket.leave(`movie:${movieId}`);
     });
+
+    socket.on('notifications:join', (userId: string) => {
+      socket.join(`user:${userId}`);
+    });
+
+    socket.on('notifications:leave', (userId: string) => {
+      socket.leave(`user:${userId}`);
+    });
   });
 
   return io;

@@ -7,10 +7,12 @@ class SocketService {
 
   connect() {
     if (this.socket) return;
-    
+
+    const token = useAuthStore.getState().token;
     this.socket = io(CONFIG.SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: true,
+      auth: token ? { token } : undefined,
     });
 
     this.socket.on('connect', () => {
@@ -31,13 +33,25 @@ class SocketService {
 
   joinMovieRoom(movieId: string) {
     if (this.socket) {
-      this.socket.emit('joinRoom', { movieId });
+      this.socket.emit('comments:join', movieId);
     }
   }
 
   leaveMovieRoom(movieId: string) {
     if (this.socket) {
-      this.socket.emit('leaveRoom', { movieId });
+      this.socket.emit('comments:leave', movieId);
+    }
+  }
+
+  joinNotifications(userId: string) {
+    if (this.socket) {
+      this.socket.emit('notifications:join', userId);
+    }
+  }
+
+  leaveNotifications(userId: string) {
+    if (this.socket) {
+      this.socket.emit('notifications:leave', userId);
     }
   }
 

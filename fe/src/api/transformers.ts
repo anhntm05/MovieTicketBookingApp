@@ -6,6 +6,7 @@ import {
   Comment,
   CommentReply,
   Movie,
+  Notification,
   Screen,
   SeatAvailability,
   TicketDetail,
@@ -282,5 +283,21 @@ export const normalizeUserSummary = (raw: unknown) => {
     email: user.email,
     role: user.role as 'CUSTOMER' | 'STAFF' | 'ADMIN',
     status: user.status,
+  };
+};
+
+export const normalizeNotification = (raw: unknown): Notification => {
+  const notification = toRecord(raw);
+
+  return {
+    id: getId(notification),
+    type: (upperSnake(String(notification.type || 'promo')) || 'PROMO') as Notification['type'],
+    title: String(notification.title || ''),
+    message: String(notification.message || ''),
+    movieTitle: String(notification.movieTitle || ''),
+    actorName: String(notification.actorName || ''),
+    actorAvatarUrl: String(notification.actorAvatarUrl || ''),
+    unread: Boolean(notification.unread),
+    createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : '',
   };
 };

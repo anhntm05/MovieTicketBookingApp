@@ -16,6 +16,7 @@ import bookingRoutes from './routes/bookingRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import commentRoutes from './routes/commentRoutes';
 import adminRoutes from './routes/adminRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 import logger from './utils/logger';
 import { initSocket } from './socket';
@@ -61,6 +62,7 @@ export const createApp = (): Express => {
   app.use(`${apiPrefix}/payments`, paymentRoutes);
   app.use(`${apiPrefix}/comments`, commentRoutes);
   app.use(`${apiPrefix}/admin`, adminRoutes);
+  app.use(`${apiPrefix}/notifications`, notificationRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

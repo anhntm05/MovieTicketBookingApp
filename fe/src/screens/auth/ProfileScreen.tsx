@@ -12,7 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RootStackParamList } from '../../types/navigation';
+import { CustomerStackParamList, RootStackParamList } from '../../types/navigation';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { theme } from '../../constants/theme';
@@ -70,6 +70,15 @@ export const ProfileScreen = () => {
         await logout();
       }},
     ]);
+  };
+
+  const handleOpenNotifications = () => {
+    if (user?.role !== 'CUSTOMER') {
+      return;
+    }
+
+    const parentNavigation = navigation.getParent<NativeStackNavigationProp<CustomerStackParamList>>();
+    parentNavigation?.navigate('Notifications');
   };
 
   if (!isAuthenticated) {
@@ -143,12 +152,22 @@ export const ProfileScreen = () => {
               />
             </View>
           ) : (
-            <Button
-              title="Edit Profile"
-              variant="secondary"
-              onPress={() => setIsEditing(true)}
-              style={styles.actionButton}
-            />
+            <>
+              <Button
+                title="Edit Profile"
+                variant="secondary"
+                onPress={() => setIsEditing(true)}
+                style={styles.actionButton}
+              />
+              {user?.role === 'CUSTOMER' ? (
+                <Button
+                  title="Notifications"
+                  variant="outline"
+                  onPress={handleOpenNotifications}
+                  style={styles.actionButton}
+                />
+              ) : null}
+            </>
           )}
 
           <Button

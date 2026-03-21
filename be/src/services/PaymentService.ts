@@ -1,8 +1,10 @@
 import { Booking } from '../models/Booking';
 import { Payment } from '../models/Payment';
+import { Showtime } from '../models/Showtime';
 import { IPayment, IPaymentRequest, UserRole } from '../types';
 import { BOOKING_STATUS, ERROR_MESSAGES, PAGINATION, PAYMENT_STATUS, USER_ROLES } from '../utils/constants';
 import BookingService from './BookingService';
+import NotificationService from './NotificationService';
 import ShowtimeSeatService from './ShowtimeSeatService';
 
 export class PaymentService {
@@ -134,6 +136,12 @@ export class PaymentService {
       booking.showtime.toString(),
       booking.seats.map((seat) => seat.toString()),
       booking._id!.toString()
+    );
+
+    const showtime = await Showtime.findById(booking.showtime).populate('movie', 'title');
+    const movieTitle = (showtime as any)?.movie?.title || 'your movie';
+    await NotificationService.createNotification(
+      NotificationService.buildBookingNotification(booking.user.toString(), 'booking_confirm', movieTitle)
     );
 
     return payment;
