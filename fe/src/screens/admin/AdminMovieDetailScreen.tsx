@@ -264,7 +264,7 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.85}>
           <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text} />
@@ -276,6 +276,8 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
           </Text>
         </View>
       </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
       <View style={styles.posterContainer}>
         {previewPoster ? (
@@ -478,11 +480,16 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
           <Text style={styles.discardText}>{isDirty ? 'DISCARD CHANGES' : 'BACK TO CATALOG'}</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',

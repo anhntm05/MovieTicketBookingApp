@@ -190,11 +190,6 @@ export const UsersScreen = () => {
           <MaterialCommunityIcons name="shield-account" size={28} color="#f90680" />
           <Text style={styles.headerTitle}>USER MANAGEMENT</Text>
         </View>
-        <TouchableOpacity style={styles.profileBtn} activeOpacity={0.85} onPress={() => refetch()}>
-          <View style={styles.profileIconPlaceholder}>
-            {isRefetching ? <ActivityIndicator size="small" color="#f90680" /> : null}
-          </View>
-        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -318,11 +313,17 @@ export const UsersScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f0a12' },
   centerContainer: { flex: 1, backgroundColor: '#0f0a12', justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20,
+    marginBottom: 20,
+    paddingVertical: 15
+  },
   brandContainer: { flexDirection: 'row', alignItems: 'center' },
-  headerTitle: { color: '#f90680', fontSize: 16, fontWeight: 'bold', marginLeft: 10, letterSpacing: 1 },
-  profileBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#1a141e', justifyContent: 'center', alignItems: 'center' },
-  profileIconPlaceholder: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#f9068030', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: {
+    color: '#f90680',
+    fontSize: 24,
+    fontWeight: 'bold', marginLeft: 10, letterSpacing: 1
+  },
   scrollContent: { paddingHorizontal: 20 },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
   kpiCard: { width: (width - 55) / 2, backgroundColor: '#1a141e', borderRadius: 20, padding: 18, position: 'relative', overflow: 'hidden' },

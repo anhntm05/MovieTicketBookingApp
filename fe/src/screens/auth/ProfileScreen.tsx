@@ -91,11 +91,13 @@ export const ProfileScreen = () => {
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: async () => {
-        // Clear tanstack query cache to prevent data leak
-        queryClient.clear();
-        await logout();
-      }},
+      {
+        text: 'Logout', style: 'destructive', onPress: async () => {
+          // Clear tanstack query cache to prevent data leak
+          queryClient.clear();
+          await logout();
+        }
+      },
     ]);
   };
 
@@ -325,7 +327,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    // paddingVertical: 15,
+    paddingBottom: 10,
   },
   headerTitle: {
     color: theme.colors.text,
