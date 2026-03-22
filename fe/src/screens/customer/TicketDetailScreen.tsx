@@ -100,7 +100,7 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (isLoading && !isRefetching) {
     return (
-      <CustomerLayout>
+      <CustomerLayout activeTabOverride="Bookings">
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={ACCENT} />
           <Text style={styles.loadingText}>Loading ticket details...</Text>
@@ -111,7 +111,7 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (!ticket) {
     return (
-      <CustomerLayout>
+      <CustomerLayout activeTabOverride="Bookings">
         <View style={styles.centerContainer}>
           <Text style={styles.loadingText}>
             {isError ? 'Could not load ticket details.' : 'Ticket details are unavailable.'}
@@ -135,7 +135,7 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const hasScannableQr = ticket.paymentStatus === 'COMPLETED' && Boolean(ticket.qrCodeValue);
 
   return (
-    <CustomerLayout>
+    <CustomerLayout activeTabOverride="Bookings">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.8}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
@@ -252,7 +252,7 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           <Text style={styles.addressText}>
             {ticket.schedule.cinemaAddress || ticket.schedule.cinemaLocation || 'Location unavailable'}
           </Text>
-          <View style={styles.mapContainer}>
+          {/* <View style={styles.mapContainer}>
             <LinearGradient
               colors={['rgba(249, 6, 128, 0.12)', 'rgba(26, 20, 30, 0.95)']}
               style={styles.mapMock}
@@ -262,7 +262,7 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.mapOverlay}>
               <View style={styles.mapMarker} />
             </View>
-          </View>
+          </View> */}
         </View>
 
         <View style={styles.summarySection}>
@@ -312,14 +312,14 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <MaterialCommunityIcons name="download" size={20} color="#fff" />
             <Text style={styles.primaryButtonText}>Download PDF</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.secondaryButton}
             activeOpacity={0.85}
             onPress={() => Alert.alert('Not available', 'Wallet integration is not implemented yet.')}
           >
             <MaterialCommunityIcons name="wallet" size={20} color="#fff" />
             <Text style={styles.secondaryButtonText}>Add to Apple Wallet</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </ScrollView>
     </CustomerLayout>

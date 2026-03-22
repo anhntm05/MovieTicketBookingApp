@@ -18,10 +18,6 @@ import { normalizeCinema, unwrapApiData } from '../../api/transformers';
 import { theme } from '../../constants/theme';
 import { Cinema } from '../../types/models';
 
-const categories = ['Nearby', 'Favorites', 'All Cinemas'] as const;
-type CinemaCategory = (typeof categories)[number];
-
-const premiumFacilityPattern = /vip|imax|premium|dolby/i;
 const cinemaImages = [
   'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=800',
   'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=800',
@@ -34,7 +30,7 @@ const mapPreviewImage =
 const getCinemaImage = (index: number) => cinemaImages[index % cinemaImages.length];
 
 export const CinemasScreen = () => {
-  const [activeCategory, setActiveCategory] = useState<CinemaCategory>('Nearby');
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: cinemas = [], isLoading, isRefetching, refetch } = useQuery<Cinema[]>({
@@ -59,34 +55,10 @@ export const CinemasScreen = () => {
     );
   }, [cinemas, normalizedSearch]);
 
-  const favoriteCinemas = useMemo(
-    () =>
-      searchedCinemas.filter((cinema) =>
-        (cinema.facilities ?? []).some((facility) => premiumFacilityPattern.test(facility))
-      ),
-    [searchedCinemas]
-  );
+  const visibleCinemas = searchedCinemas;
+  const subtitle = `${searchedCinemas.length} active cinemas available`;
 
-  const visibleCinemas = useMemo(() => {
-    switch (activeCategory) {
-      case 'Favorites':
-        return favoriteCinemas;
-      case 'All Cinemas':
-        return searchedCinemas;
-      case 'Nearby':
-      default:
-        return searchedCinemas.slice(0, 4);
-    }
-  }, [activeCategory, favoriteCinemas, searchedCinemas]);
-
-  const subtitle =
-    activeCategory === 'Favorites'
-      ? 'Premium picks with standout formats'
-      : activeCategory === 'All Cinemas'
-        ? `${searchedCinemas.length} active cinemas available`
-        : 'Find your favorite spot';
-
-  const renderHeader = () => (
+  const headerContent = (
     <>
       <View style={styles.header}>
         <View>
@@ -107,16 +79,23 @@ export const CinemasScreen = () => {
             style={styles.searchIcon}
           />
           <TextInput
-            placeholder="Search by cinema, city, facility..."
+            placeholder="Search by cinema, city, ..."
             placeholderTextColor={theme.colors.textSecondary}
             style={styles.searchInput}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
+            value={searchInput}
+            onChangeText={setSearchInput}
           />
+          <TouchableOpacity
+            style={styles.findButton}
+            activeOpacity={0.85}
+            onPress={() => setSearchTerm(searchInput)}
+          >
+            <Text style={styles.findButtonText}>Find</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.tabContainer}>
+      {/* <View style={styles.tabContainer}>
         {categories.map((category) => {
           const isActive = activeCategory === category;
 
@@ -131,13 +110,13 @@ export const CinemasScreen = () => {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </View> */}
     </>
   );
 
   const renderCinema = ({ item, index }: { item: Cinema; index: number }) => {
     const tags = (item.facilities ?? []).slice(0, 3);
-    const locationText = [item.location, item.address].filter(Boolean).join(' • ') || 'Location unavailable';
+    const locationText = [item.location, item.address].filter(Boolean).join(' ï¿½ ') || 'Location unavailable';
 
     return (
       <TouchableOpacity style={styles.card} activeOpacity={0.9}>
@@ -147,9 +126,9 @@ export const CinemasScreen = () => {
             <Text style={styles.cinemaName} numberOfLines={1}>
               {item.name}
             </Text>
-            <TouchableOpacity activeOpacity={0.85}>
+            {/* <TouchableOpacity activeOpacity={0.85}>
               <MaterialCommunityIcons name="heart-outline" size={20} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <View style={styles.locationRow}>
@@ -213,8 +192,8 @@ export const CinemasScreen = () => {
         data={visibleCinemas}
         keyExtractor={(item) => item.id}
         renderItem={renderCinema}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
+        ListHeaderComponent={headerContent}
+        // ListFooterComponent={renderFooter}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -229,9 +208,7 @@ export const CinemasScreen = () => {
             <MaterialCommunityIcons name="movie-search-outline" size={42} color={theme.colors.primary} />
             <Text style={styles.emptyTitle}>No cinemas found</Text>
             <Text style={styles.emptyText}>
-              {activeCategory === 'Favorites'
-                ? 'No premium cinemas match this filter yet.'
-                : 'Try another search keyword or refresh the list.'}
+              Try another search keyword or refresh the list.
             </Text>
           </View>
         }
@@ -301,6 +278,22 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: 14,
     fontFamily: theme.typography.fontFamilies.regular,
+  },
+  findButton: {
+    marginLeft: 10,
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#f9068015',
+    borderWidth: 1,
+    borderColor: '#f9068030',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  findButtonText: {
+    color: theme.colors.primary,
+    fontSize: 13,
+    fontFamily: theme.typography.fontFamilies.bold,
   },
   tabContainer: {
     flexDirection: 'row',

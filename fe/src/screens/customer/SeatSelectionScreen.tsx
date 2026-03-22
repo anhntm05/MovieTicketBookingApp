@@ -26,7 +26,7 @@ const { width } = Dimensions.get('window');
 const ACCENT = '#f90680';
 const BACKGROUND = '#0f0a12';
 const TEXT_MUTED = '#999';
-const SEAT_AVAILABLE = '#666';
+const SEAT_AVAILABLE = '#8e8e8e';
 const SEAT_UNAVAILABLE = '#333';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'SeatSelection'>;

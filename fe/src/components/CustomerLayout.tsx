@@ -13,6 +13,7 @@ import { useAuthStore } from '../store/authStore';
 interface CustomerLayoutProps {
   children: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
+  activeTabOverride?: MainTabName;
 }
 
 const customerTabs: MainTabName[] = ['Home', 'Cinemas', 'Bookings', 'Profile'];
@@ -43,11 +44,12 @@ const findActiveTab = (state: any): MainTabName => {
 export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
   children,
   contentStyle,
+  activeTabOverride,
 }) => {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const { isAuthenticated } = useAuthStore();
-  const activeTab = isMainTab(route.name) ? route.name : findActiveTab(navigation.getState());
+  const activeTab = activeTabOverride || (isMainTab(route.name) ? route.name : findActiveTab(navigation.getState()));
 
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['layout-notifications'],
