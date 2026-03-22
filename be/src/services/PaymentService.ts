@@ -131,6 +131,7 @@ export class PaymentService {
 
     booking.status = BOOKING_STATUS.CONFIRMED as any;
     booking.paymentStatus = PAYMENT_STATUS.COMPLETED as any;
+    booking.holdExpiresAt = null;
     await booking.save();
     await ShowtimeSeatService.confirmBooking(
       booking.showtime.toString(),

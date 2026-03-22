@@ -91,8 +91,16 @@ export const SeatSelectionScreen: React.FC<Props> = ({ route, navigation }) => {
       });
     } catch (error: any) {
       Alert.alert(
-        'Hold Failed',
-        error.response?.data?.message || 'The seats may have been taken by someone else.'
+        'Error',
+        error.response?.data?.message || 'The seats may have been taken by someone else.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.navigate('Tabs', { screen: 'Home' });
+            },
+          },
+        ]
       );
       refetchSeats();
       setSelectedSeatIds([]);

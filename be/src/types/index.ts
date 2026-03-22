@@ -182,7 +182,7 @@ export interface IBooking {
   bookingCode: string;
   user: Types.ObjectId | string;
   showtime: Types.ObjectId | string;
-  seats: string[];
+  seats: Array<Types.ObjectId | string>;
   concessions?: IBookingConcession[];
   totalPrice: number;
   status: BookingStatus;
@@ -212,6 +212,7 @@ export interface ITicketDetail {
   bookingCode: string;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
+  holdExpiresAt?: Date | null;
   paymentMethod?: PaymentMethod;
   transactionId?: string;
   qrCodeValue: string;

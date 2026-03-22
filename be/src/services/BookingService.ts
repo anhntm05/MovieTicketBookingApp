@@ -243,6 +243,7 @@ export class BookingService {
       bookingCode: String(booking.bookingCode || ''),
       status: booking.status,
       paymentStatus: booking.paymentStatus,
+      holdExpiresAt: booking.holdExpiresAt || null,
       paymentMethod: payment?.method,
       transactionId: payment?.transactionId,
       qrCodeValue,
@@ -311,6 +312,8 @@ export class BookingService {
     }
 
     booking.status = BOOKING_STATUS.CANCELLED as any;
+    booking.paymentStatus = PAYMENT_STATUS.FAILED as any;
+    booking.holdExpiresAt = null;
     booking.cancelledAt = new Date();
     await booking.save();
     await ShowtimeSeatService.releaseBooking(
@@ -335,6 +338,7 @@ export class BookingService {
       new Date(booking.holdExpiresAt).getTime() <= Date.now()
     ) {
       booking.status = BOOKING_STATUS.EXPIRED;
+      booking.paymentStatus = PAYMENT_STATUS.FAILED as any;
       await booking.save();
       await ShowtimeSeatService.releaseBooking(
         booking.showtime.toString(),

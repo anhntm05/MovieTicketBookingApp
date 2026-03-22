@@ -211,12 +211,15 @@ export const normalizeBooking = (raw: unknown): Booking => {
     userId: getId(booking.user),
     showtimeId: showtime?.id || getId(booking.showtime),
     status: (upperSnake(booking.status) || 'PENDING_PAYMENT') as Booking['status'],
+    paymentStatus: (upperSnake(booking.paymentStatus) || 'PENDING') as Booking['paymentStatus'],
     totalAmount: Number(booking.totalAmount || booking.totalPrice || 0),
     createdAt: booking.bookingDate
       ? new Date(booking.bookingDate).toISOString()
       : booking.createdAt
         ? new Date(booking.createdAt).toISOString()
         : '',
+    holdExpiresAt: booking.holdExpiresAt ? new Date(booking.holdExpiresAt).toISOString() : '',
+    seatIds: ensureArray(booking.seats).map(getId).filter(Boolean),
     showtime,
   };
 };
@@ -244,6 +247,7 @@ export const normalizeTicketDetail = (raw: unknown): TicketDetail => {
     bookingCode: String(ticket.bookingCode || ''),
     status: (upperSnake(ticket.status) || 'CONFIRMED') as TicketDetail['status'],
     paymentStatus: (upperSnake(ticket.paymentStatus) || 'PENDING') as TicketDetail['paymentStatus'],
+    holdExpiresAt: ticket.holdExpiresAt ? new Date(ticket.holdExpiresAt).toISOString() : '',
     paymentMethod: upperSnake(ticket.paymentMethod) as TicketDetail['paymentMethod'],
     transactionId: String(ticket.transactionId || ''),
     qrCodeValue: String(ticket.qrCodeValue || ticket.bookingCode || ''),

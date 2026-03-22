@@ -91,7 +91,7 @@ export const SHOWTIME_SEAT_STATUS = {
   BLOCKED: 'blocked',
 };
 
-export const SEAT_HOLD_EXPIRY_MINUTES = 15; // Seats are held for 15 minutes
+export const SEAT_HOLD_EXPIRY_MINUTES = 5; // Seats are held for 5 minutes
 
 export const PAGINATION = {
   DEFAULT_PAGE: 1,

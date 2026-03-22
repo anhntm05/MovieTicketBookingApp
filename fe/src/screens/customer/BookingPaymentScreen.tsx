@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +13,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CustomerStackParamList } from '../../types/navigation';
 import apiClient from '../../api/client';
 import {
@@ -22,7 +22,7 @@ import {
   normalizeShowtime,
   unwrapApiData,
 } from '../../api/transformers';
-import { SeatAvailability, Showtime } from '../../types/models';
+import { Booking, SeatAvailability, Showtime } from '../../types/models';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'BookingPayment'>;
 
@@ -35,51 +35,91 @@ const MUTED = '#666';
 const MUTED_LIGHT = '#aaa';
 
 export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { showtimeId, selectedSeatIds } = route.params;
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [isCreating, setIsCreating] = useState(true);
-  const [isPaying, setIsPaying] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
+  const { bookingId: initialBookingId, showtimeId: routeShowtimeId, selectedSeatIds: routeSeatIds } = route.params;
+  const [bookingId, setBookingId] = useState<string | null>(initialBookingId || null);
+  const [isCreating, setIsCreating] = useState(!initialBookingId);
+  const [now, setNow] = useState(Date.now());
+  const expiryHandledRef = useRef(false);
+  const createStartedRef = useRef(false);
   const queryClient = useQueryClient();
 
-  const { data: showtime } = useQuery<Showtime>({
-    queryKey: ['showtime', showtimeId],
-    queryFn: async () => normalizeShowtime(unwrapApiData(await apiClient.get(`/showtimes/${showtimeId}`))),
-  });
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
 
-  const { data: seats = [] } = useQuery<SeatAvailability[]>({
-    queryKey: ['seats', showtimeId],
-    queryFn: async () => {
-      const data = unwrapApiData<unknown[]>(await apiClient.get(`/showtimes/${showtimeId}/seats`));
-      return data.map(normalizeSeatAvailability);
+    return () => clearInterval(timer);
+  }, []);
+
+  const createBookingMutation = useMutation({
+    mutationFn: async () =>
+      normalizeBooking(
+        unwrapApiData(
+          await apiClient.post('/bookings', {
+            showtime: routeShowtimeId,
+            seats: routeSeatIds,
+          })
+        )
+      ),
+    onSuccess: (booking) => {
+      setBookingId(booking.id);
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (error: any) => {
+      Alert.alert('Error', error.response?.data?.message || 'Failed to create booking', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    },
+    onSettled: () => {
+      setIsCreating(false);
     },
   });
 
   useEffect(() => {
-    const createBooking = async () => {
-      try {
-        const booking = normalizeBooking(
-          unwrapApiData(
-            await apiClient.post('/bookings', {
-              showtime: showtimeId,
-              seats: selectedSeatIds,
-            })
-          )
-        );
-        setBookingId(booking.id);
-        setTotalAmount(booking.totalAmount);
-      } catch (error: any) {
-        Alert.alert('Error', error.response?.data?.message || 'Failed to create booking', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
-      } finally {
-        setIsCreating(false);
-      }
-    };
+    if (initialBookingId) {
+      return;
+    }
 
-    createBooking();
-  }, [showtimeId, selectedSeatIds, navigation]);
+    if (!routeShowtimeId || !routeSeatIds || routeSeatIds.length === 0) {
+      setIsCreating(false);
+      Alert.alert('Booking unavailable', 'Missing seat selection for this payment session.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+      return;
+    }
+
+    if (createStartedRef.current) {
+      return;
+    }
+
+    createStartedRef.current = true;
+    createBookingMutation.mutate();
+  }, [createBookingMutation, initialBookingId, navigation, routeSeatIds, routeShowtimeId]);
+
+  const { data: booking, isLoading: isLoadingBooking, refetch: refetchBooking } = useQuery<Booking>({
+    queryKey: ['booking', bookingId],
+    enabled: Boolean(bookingId),
+    queryFn: async () => normalizeBooking(unwrapApiData(await apiClient.get(`/bookings/${bookingId}`))),
+    refetchInterval: (query) => (query.state.data?.status === 'PENDING_PAYMENT' ? 5000 : false),
+  });
+
+  const effectiveShowtimeId = booking?.showtimeId || routeShowtimeId;
+  const selectedSeatIds = booking?.seatIds?.length ? booking.seatIds : routeSeatIds || [];
+
+  const { data: showtime } = useQuery<Showtime>({
+    queryKey: ['showtime', effectiveShowtimeId],
+    enabled: Boolean(effectiveShowtimeId),
+    queryFn: async () => normalizeShowtime(unwrapApiData(await apiClient.get(`/showtimes/${effectiveShowtimeId}`))),
+  });
+
+  const { data: seats = [] } = useQuery<SeatAvailability[]>({
+    queryKey: ['seats', effectiveShowtimeId],
+    enabled: Boolean(effectiveShowtimeId),
+    queryFn: async () => {
+      const data = unwrapApiData<unknown[]>(await apiClient.get(`/showtimes/${effectiveShowtimeId}/seats`));
+      return data.map(normalizeSeatAvailability);
+    },
+  });
 
   const selectedSeatLabels = useMemo(() => {
     return seats
@@ -94,7 +134,16 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
       .map((seat) => `${seat.row}${seat.number}`);
   }, [seats, selectedSeatIds]);
 
-  const bookingCode = bookingId ? bookingId.slice(0, 8).toUpperCase() : 'PENDING';
+  const bookingCode = booking?.bookingCode || (bookingId ? bookingId.slice(0, 8).toUpperCase() : 'PENDING');
+  const totalAmount = booking?.totalAmount || 0;
+  const isPaid = booking?.paymentStatus === 'COMPLETED' && booking?.status === 'CONFIRMED';
+  const remainingMs = booking?.status === 'PENDING_PAYMENT' && booking.holdExpiresAt
+    ? Math.max(0, new Date(booking.holdExpiresAt).getTime() - now)
+    : 0;
+  const totalSecondsLeft = Math.max(0, Math.ceil(remainingMs / 1000));
+  const remainingLabel = `${String(Math.floor(totalSecondsLeft / 60)).padStart(2, '0')}:${String(
+    totalSecondsLeft % 60
+  ).padStart(2, '0')}`;
   const movie = showtime?.movie;
   const cinemaName = [showtime?.screen?.cinema?.name, showtime?.screen?.name]
     .filter(Boolean)
@@ -115,37 +164,119 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
       })
     : 'Time unavailable';
 
-  const handlePayment = async () => {
-    if (!bookingId || isPaid) {
-      if (isPaid && bookingId) {
-        navigation.navigate('TicketDetail', { bookingId });
+  useEffect(() => {
+    if (booking?.status === 'EXPIRED' && !expiryHandledRef.current) {
+      expiryHandledRef.current = true;
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      if (effectiveShowtimeId) {
+        queryClient.invalidateQueries({ queryKey: ['seats', effectiveShowtimeId] });
       }
-      return;
+      Alert.alert('Payment expired', 'Your 5-minute payment window has ended and the seats have been released.', [
+        {
+          text: 'Back to Bookings',
+          onPress: () => navigation.navigate('Tabs', { screen: 'Bookings' }),
+        },
+      ]);
     }
+  }, [booking?.status, effectiveShowtimeId, navigation, queryClient]);
 
-    try {
-      setIsPaying(true);
-      await apiClient.post('/payments/process', {
+  useEffect(() => {
+    if (booking?.status === 'PENDING_PAYMENT' && remainingMs === 0) {
+      refetchBooking();
+    }
+  }, [booking?.status, remainingMs, refetchBooking]);
+
+  const paymentMutation = useMutation({
+    mutationFn: async () =>
+      apiClient.post('/payments/process', {
         booking: bookingId,
         amount: totalAmount,
         method: 'bank_transfer',
-      });
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['seats', showtimeId] });
-      setIsPaid(true);
-    } catch (error: any) {
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['bookings'] }),
+        bookingId ? queryClient.invalidateQueries({ queryKey: ['booking', bookingId] }) : Promise.resolve(),
+        effectiveShowtimeId
+          ? queryClient.invalidateQueries({ queryKey: ['seats', effectiveShowtimeId] })
+          : Promise.resolve(),
+      ]);
+      await refetchBooking();
+    },
+    onError: (error: any) => {
       Alert.alert('Payment Failed', error.response?.data?.message || 'Could not process payment');
-    } finally {
-      setIsPaying(false);
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => apiClient.put(`/bookings/${bookingId}/cancel`),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['bookings'] }),
+        bookingId ? queryClient.invalidateQueries({ queryKey: ['booking', bookingId] }) : Promise.resolve(),
+        effectiveShowtimeId
+          ? queryClient.invalidateQueries({ queryKey: ['seats', effectiveShowtimeId] })
+          : Promise.resolve(),
+      ]);
+      Alert.alert('Booking cancelled', 'Your pending booking was cancelled and the seats were released.', [
+        {
+          text: 'Back to Bookings',
+          onPress: () => navigation.navigate('Tabs', { screen: 'Bookings' }),
+        },
+      ]);
+    },
+    onError: (error: any) => {
+      Alert.alert('Cancel failed', error.response?.data?.message || 'Could not cancel this booking');
+    },
+  });
+
+  const handlePayment = () => {
+    if (!bookingId) {
+      return;
     }
+
+    if (isPaid) {
+      navigation.navigate('TicketDetail', { bookingId });
+      return;
+    }
+
+    if (booking?.status !== 'PENDING_PAYMENT') {
+      Alert.alert('Payment unavailable', 'This booking is no longer awaiting payment.');
+      return;
+    }
+
+    if (remainingMs <= 0) {
+      refetchBooking();
+      return;
+    }
+
+    Alert.alert(
+      'Confirm payment',
+      'After payment is confirmed, this ticket cannot be cancelled and no refund will be issued from this screen. Continue?',
+      [
+        { text: 'Keep reviewing', style: 'cancel' },
+        { text: 'Pay now', onPress: () => paymentMutation.mutate() },
+      ]
+    );
   };
 
-  if (isCreating) {
+  const handleCancelBooking = () => {
+    if (!bookingId || booking?.status !== 'PENDING_PAYMENT') {
+      return;
+    }
+
+    Alert.alert('Cancel pending booking', 'This will release your held seats immediately. Continue?', [
+      { text: 'Keep booking', style: 'cancel' },
+      { text: 'Cancel booking', style: 'destructive', onPress: () => cancelMutation.mutate() },
+    ]);
+  };
+
+  if (isCreating || (bookingId && isLoadingBooking)) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={ACCENT} />
-          <Text style={styles.loadingText}>Securing your seats...</Text>
+          <Text style={styles.loadingText}>{isCreating ? 'Securing your seats...' : 'Loading payment session...'}</Text>
         </View>
       </SafeAreaView>
     );
@@ -181,8 +312,14 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
           <Text style={styles.subtitleText}>
             {isPaid
               ? 'Your cinematic adventure is ready.'
-              : 'Scan the QR code and confirm your payment.'}
+              : 'Finish payment before the timer runs out to keep your seats.'}
           </Text>
+          {!isPaid && booking?.status === 'PENDING_PAYMENT' ? (
+            <View style={styles.timerBadge}>
+              <MaterialCommunityIcons name="timer-outline" size={18} color="#fff" />
+              <Text style={styles.timerText}>{remainingLabel} left</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.ticketCard}>
@@ -245,7 +382,7 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
               <View style={[styles.col, styles.alignEnd]}>
                 <Text style={styles.label}>STATUS</Text>
                 <Text style={[styles.value, isPaid ? styles.successValue : styles.pendingValue]}>
-                  {isPaid ? 'PAID' : 'PENDING'}
+                  {isPaid ? 'PAID' : booking?.status === 'EXPIRED' ? 'EXPIRED' : 'PENDING'}
                 </Text>
               </View>
             </View>
@@ -268,17 +405,17 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
         <Text style={styles.instructionText}>
           {isPaid
             ? 'Show this QR code at the theater entrance.'
-            : 'Scan this QR code to pay, then confirm below.'}
+            : `Confirm payment within ${remainingLabel} or the seats will be released automatically.`}
         </Text>
 
         <View style={styles.actions}>
           <TouchableOpacity
-            style={[styles.downloadButton, (!bookingId || isPaying) && styles.disabledButton]}
+            style={[styles.downloadButton, (!bookingId || paymentMutation.isPending || cancelMutation.isPending) && styles.disabledButton]}
             onPress={handlePayment}
             activeOpacity={0.85}
-            disabled={!bookingId || isPaying}
+            disabled={!bookingId || paymentMutation.isPending || cancelMutation.isPending}
           >
-            {isPaying ? (
+            {paymentMutation.isPending ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
@@ -294,23 +431,35 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
             )}
           </TouchableOpacity>
 
+          {!isPaid && booking?.status === 'PENDING_PAYMENT' ? (
+            <TouchableOpacity
+              style={[styles.cancelButton, cancelMutation.isPending && styles.disabledButton]}
+              activeOpacity={0.85}
+              onPress={handleCancelBooking}
+              disabled={cancelMutation.isPending || paymentMutation.isPending}
+            >
+              {cancelMutation.isPending ? (
+                <ActivityIndicator size="small" color={ACCENT} />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="close-circle-outline" size={20} color={ACCENT} />
+                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          ) : null}
+
           <TouchableOpacity
             style={styles.shareButton}
             activeOpacity={0.85}
             onPress={() =>
               navigation.navigate('Tabs', {
-                screen: isPaid ? 'Bookings' : 'Home',
+                screen: 'Bookings',
               })
             }
           >
-            <MaterialCommunityIcons
-              name={isPaid ? 'ticket-confirmation-outline' : 'home-variant-outline'}
-              size={20}
-              color={ACCENT}
-            />
-            <Text style={styles.shareButtonText}>
-              {isPaid ? 'Back to Bookings' : 'Back to Home'}
-            </Text>
+            <MaterialCommunityIcons name="ticket-confirmation-outline" size={20} color={ACCENT} />
+            <Text style={styles.shareButtonText}>Back to Bookings</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -378,6 +527,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
     opacity: 0.8,
+  },
+  timerBadge: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9068025',
+    borderWidth: 1,
+    borderColor: '#f9068050',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  timerText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   ticketCard: {
     marginHorizontal: 20,
@@ -540,6 +706,24 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  cancelButton: {
+    height: 60,
+    borderRadius: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(249, 6, 128, 0.3)',
+    backgroundColor: 'rgba(249, 6, 128, 0.08)',
+    width: '100%',
+    marginBottom: 15,
+  },
+  cancelButtonText: {
+    color: ACCENT,
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 10,

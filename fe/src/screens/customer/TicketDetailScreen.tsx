@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -97,6 +97,12 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       Alert.alert('Share failed', 'Could not open the share sheet.');
     }
   };
+
+  useEffect(() => {
+    if (ticket?.status === 'PENDING_PAYMENT') {
+      navigation.replace('BookingPayment', { bookingId });
+    }
+  }, [bookingId, navigation, ticket?.status]);
 
   if (isLoading && !isRefetching) {
     return (
