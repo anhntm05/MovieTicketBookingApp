@@ -225,7 +225,12 @@ export const validateShowtimeCreate = [
     .withMessage('Invalid screen ID'),
   body('startTime')
     .isISO8601()
-    .withMessage('Invalid start time'),
+    .withMessage('Invalid start time')
+    .custom((value) => {
+      const startTime = new Date(value);
+      return !Number.isNaN(startTime.getTime()) && startTime.getTime() > Date.now();
+    })
+    .withMessage('Start time must be later than now'),
   body('endTime')
     .isISO8601()
     .withMessage('Invalid end time'),
