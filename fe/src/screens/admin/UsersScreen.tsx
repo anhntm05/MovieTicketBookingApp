@@ -1,7 +1,6 @@
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -11,10 +10,13 @@ import {
   View,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../api/client';
 import { theme } from '../../constants/theme';
 import { unwrapApiData } from '../../api/transformers';
+import { AdminUserStackParamList } from '../../types/navigation';
 
 const { width } = Dimensions.get('window');
 
@@ -24,23 +26,6 @@ type DirectoryUser = {
   email: string;
   role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
   status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
-};
-
-type SelectedUser = {
-  id: string;
-  fullName: string;
-  email: string;
-  role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
-  status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
-  totalSpent: number;
-  tickets: number;
-  favoriteCinema: string;
-  recentPurchases: Array<{
-    id: string;
-    title: string;
-    date: string;
-    price: number;
-  }>;
 };
 
 type UserAnalyticsResponse = {
@@ -54,7 +39,6 @@ type UserAnalyticsResponse = {
     userGrowthRate: number;
   };
   directory: DirectoryUser[];
-  selectedUser?: SelectedUser;
   pagination: {
     page: number;
     limit: number;
@@ -69,20 +53,7 @@ const formatCompact = (value: number) => {
   return `${value}`;
 };
 
-const formatMoney = (value: number) => {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
-  return `$${value.toFixed(0)}`;
-};
-
 const formatChange = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
-
-const formatPurchaseDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
 const getInitials = (name: string) =>
   name
@@ -147,39 +118,42 @@ const AvatarCircle = ({ name, large = false }: { name: string; large?: boolean }
 
 const UserRow = ({
   user,
-  isSelected,
   onPress,
 }: {
   user: DirectoryUser;
-  isSelected: boolean;
   onPress: () => void;
-}) => (
-  <TouchableOpacity style={[styles.userRow, isSelected && styles.userRowActive]} activeOpacity={0.88} onPress={onPress}>
-    <AvatarCircle name={user.fullName} />
-    <View style={styles.rowInfo}>
-      <Text style={styles.rowName}>{user.fullName}</Text>
-      <Text style={styles.rowEmail}>{user.email}</Text>
-    </View>
-    <View style={[styles.statusBadge, { backgroundColor: user.status === 'ACTIVE' ? '#03DAC620' : '#f9068020' }]}>
-      <Text style={[styles.statusText, { color: user.status === 'ACTIVE' ? '#03DAC6' : '#f90680' }]}>{user.status}</Text>
-    </View>
-  </TouchableOpacity>
-);
+}) => {
+  const statusColor = user.status === 'ACTIVE' ? '#03DAC6' : user.status === 'BLOCKED' ? '#f90680' : '#F2C94C';
+
+  return (
+    <TouchableOpacity style={styles.userRow} activeOpacity={0.88} onPress={onPress}>
+      <AvatarCircle name={user.fullName} />
+      <View style={styles.rowInfo}>
+        <Text style={styles.rowName}>{user.fullName}</Text>
+        <Text style={styles.rowEmail}>{user.email}</Text>
+      </View>
+      <View style={styles.rowMeta}>
+        <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
+          <Text style={[styles.statusText, { color: statusColor }]}>{user.status}</Text>
+        </View>
+        <MaterialCommunityIcons name="chevron-right" size={18} color="#6b6170" />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export const UsersScreen = () => {
-  const queryClient = useQueryClient();
+  const navigation = useNavigation<NativeStackNavigationProp<AdminUserStackParamList, 'AdminUserDirectory'>>();
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery.trim());
   const [page, setPage] = useState(1);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     setPage(1);
-    setSelectedUserId(null);
   }, [deferredSearchQuery]);
 
   const { data, error, isLoading, isRefetching, refetch } = useQuery<UserAnalyticsResponse>({
-    queryKey: ['admin-users-analytics', deferredSearchQuery, page, selectedUserId],
+    queryKey: ['admin-users-analytics', deferredSearchQuery, page],
     queryFn: async () =>
       unwrapApiData<UserAnalyticsResponse>(
         await apiClient.get('/admin/users/analytics', {
@@ -187,34 +161,11 @@ export const UsersScreen = () => {
             page,
             limit: 10,
             search: deferredSearchQuery || undefined,
-            userId: selectedUserId || undefined,
           },
         })
       ),
   });
-
-  useEffect(() => {
-    if (!selectedUserId && data?.directory.length) {
-      setSelectedUserId(data.directory[0].id);
-    }
-  }, [data?.directory, selectedUserId]);
-
-  const selectedUser = data?.selectedUser;
   const pagination = data?.pagination;
-
-  const roleMutation = useMutation({
-    mutationFn: async ({ id, role }: { id: string; role: DirectoryUser['role'] }) =>
-      apiClient.patch(`/admin/users/${id}/role`, { role: role.toLowerCase() }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users-analytics'] }),
-    onError: (err: any) => Alert.alert('Error', err.response?.data?.message || 'Failed to update role'),
-  });
-
-  const statusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'active' | 'blocked' }) =>
-      apiClient.patch(`/admin/users/${id}/status`, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users-analytics'] }),
-    onError: (err: any) => Alert.alert('Error', err.response?.data?.message || 'Failed to update user status'),
-  });
 
   const pageNumbers = useMemo(() => {
     if (!pagination) return [];
@@ -298,16 +249,22 @@ export const UsersScreen = () => {
         <View style={styles.directoryCard}>
           <View style={styles.directoryHeader}>
             <Text style={styles.colLabel}>USER</Text>
-            <Text style={styles.colLabel}>STATUS</Text>
+            <Text style={styles.colLabel}>DETAILS</Text>
           </View>
-          {(data?.directory || []).map((user) => (
-            <UserRow
-              key={user.id}
-              user={user}
-              isSelected={selectedUserId === user.id}
-              onPress={() => setSelectedUserId(user.id)}
-            />
-          ))}
+          {(data?.directory || []).length ? (
+            data!.directory.map((user) => (
+              <UserRow
+                key={user.id}
+                user={user}
+                onPress={() => navigation.navigate('AdminCustomerDetail', { userId: user.id })}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="account-search-outline" size={24} color="#666" />
+              <Text style={styles.emptyStateText}>No users matched this search.</Text>
+            </View>
+          )}
 
           <View style={styles.pagination}>
             <Text style={styles.paginationText}>
@@ -344,90 +301,6 @@ export const UsersScreen = () => {
             </View>
           </View>
         </View>
-
-        {selectedUser ? (
-          <View style={styles.userDetailCard}>
-            <View style={styles.userHero}>
-              <AvatarCircle name={selectedUser.fullName} large />
-              <View style={styles.userHeroInfo}>
-                <Text style={styles.userHeroName}>{selectedUser.fullName}</Text>
-                <View style={styles.userHeroEmailRow}>
-                  <MaterialCommunityIcons name="email-outline" size={14} color="#666" />
-                  <Text style={styles.userHeroEmail}>{selectedUser.email}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.userStatsRow}>
-              <View style={styles.userStatItem}>
-                <Text style={styles.userStatLabel}>TOTAL SPENT</Text>
-                <Text style={styles.userStatValue}>{formatMoney(selectedUser.totalSpent)}</Text>
-              </View>
-              <View style={styles.userStatItem}>
-                <Text style={styles.userStatLabel}>TICKETS</Text>
-                <Text style={styles.userStatValue}>{selectedUser.tickets}</Text>
-              </View>
-            </View>
-
-            <View style={styles.prefSection}>
-              <Text style={styles.prefLabel}>FAVORITE CINEMA</Text>
-              <Text style={styles.prefValue}>{selectedUser.favoriteCinema}</Text>
-            </View>
-
-            <Text style={styles.subSectionTitle}>RECENT PURCHASES</Text>
-            <View style={styles.purchaseList}>
-              {selectedUser.recentPurchases.length ? (
-                selectedUser.recentPurchases.map((item) => (
-                  <View key={item.id} style={styles.purchaseItem}>
-                    <View>
-                      <Text style={styles.purchaseTitle}>{item.title}</Text>
-                      <Text style={styles.purchaseDate}>{formatPurchaseDate(item.date)}</Text>
-                    </View>
-                    <Text style={styles.purchasePrice}>{formatMoney(item.price)}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.emptyPurchasesText}>No completed purchases yet.</Text>
-              )}
-            </View>
-
-            <View style={styles.rolePicker}>
-              <Text style={styles.rolePickerText}>Change Role</Text>
-              <View style={styles.roleChipRow}>
-                {(['CUSTOMER', 'STAFF', 'ADMIN'] as const).map((role) => {
-                  const isActive = selectedUser.role === role;
-                  return (
-                    <TouchableOpacity
-                      key={role}
-                      style={[styles.roleChip, isActive && styles.roleChipActive]}
-                      activeOpacity={0.85}
-                      disabled={isActive || roleMutation.isPending}
-                      onPress={() => roleMutation.mutate({ id: selectedUser.id, role })}
-                    >
-                      <Text style={[styles.roleChipText, isActive && styles.roleChipTextActive]}>{role}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.banBtn, selectedUser.status === 'BLOCKED' && styles.unbanBtn]}
-              activeOpacity={0.88}
-              disabled={statusMutation.isPending}
-              onPress={() =>
-                statusMutation.mutate({
-                  id: selectedUser.id,
-                  status: selectedUser.status === 'BLOCKED' ? 'active' : 'blocked',
-                })
-              }
-            >
-              <Text style={[styles.banBtnText, selectedUser.status === 'BLOCKED' && styles.unbanBtnText]}>
-                {selectedUser.status === 'BLOCKED' ? 'ACTIVATE USER ACCOUNT' : 'DEACTIVATE USER ACCOUNT'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
 
         {error ? (
           <View style={styles.errorBanner}>
@@ -476,7 +349,8 @@ const styles = StyleSheet.create({
   avatarInitialLarge: { color: '#fff', fontSize: 22, fontWeight: '700' },
   rowInfo: { flex: 1 },
   rowName: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  rowEmail: { color: '#666', fontSize: 12 },
+  rowEmail: { color: '#666', fontSize: 12, marginTop: 2 },
+  rowMeta: { alignItems: 'flex-end', gap: 8 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 10, fontWeight: 'bold' },
   pagination: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, paddingHorizontal: 10, gap: 12 },
@@ -486,6 +360,8 @@ const styles = StyleSheet.create({
   activePageBtn: { backgroundColor: '#f90680' },
   activePageText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   pageText: { color: '#666', fontSize: 12, fontWeight: 'bold' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 24, gap: 10 },
+  emptyStateText: { color: '#777', fontSize: 13 },
   userDetailCard: { backgroundColor: '#1a141e', borderRadius: 30, padding: 25 },
   userHero: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
   userAvatarLargePlaceholder: { width: 64, height: 64, borderRadius: 15 },

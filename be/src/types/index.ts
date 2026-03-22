@@ -506,34 +506,63 @@ export interface IUserAnalyticsDirectoryItem {
   status: Uppercase<UserStatus>;
 }
 
-export interface IUserAnalyticsPurchaseItem {
-  id: string;
-  title: string;
-  date: Date;
-  price: number;
-}
-
-export interface IUserAnalyticsSelectedUser {
-  id: string;
-  fullName: string;
-  email: string;
-  role: Uppercase<UserRole>;
-  status: Uppercase<UserStatus>;
-  totalSpent: number;
-  tickets: number;
-  favoriteCinema: string;
-  recentPurchases: IUserAnalyticsPurchaseItem[];
-}
-
 export interface IUserAnalyticsPayload {
   summary: IUserAnalyticsSummary;
   directory: IUserAnalyticsDirectoryItem[];
-  selectedUser?: IUserAnalyticsSelectedUser;
   pagination: {
     page: number;
     limit: number;
     total: number;
     pages: number;
+  };
+}
+
+export interface IUserDetailBookingItem {
+  id: string;
+  title: string;
+  date: Date;
+  hall: string;
+  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING_PAYMENT' | 'EXPIRED';
+  posterUrl?: string;
+}
+
+export interface IUserDetailFeedback {
+  id: string;
+  movieTitle: string;
+  rating: number;
+  content: string;
+  createdAt: Date;
+}
+
+export interface IUserDetailTrendPoint {
+  label: string;
+  amount: number;
+}
+
+export interface IUserDetailPayload {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Uppercase<UserRole>;
+    status: Uppercase<UserStatus>;
+    memberSince: Date;
+    tierLabel: string;
+  };
+  stats: {
+    totalSpent: number;
+    totalBookings: number;
+    cancellationRate: number;
+    commentCount: number;
+  };
+  recentBookings: IUserDetailBookingItem[];
+  latestFeedback?: IUserDetailFeedback;
+  spendingTrend: IUserDetailTrendPoint[];
+  loyalty: {
+    tierLabel: string;
+    progressPercent: number;
+    frequencyPerMonth: number;
+    averageTicketValue: number;
   };
 }
 
