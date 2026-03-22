@@ -112,6 +112,11 @@ export const validateMovieCreate = [
   body('rating')
     .isFloat({ min: 0, max: 10 })
     .withMessage('Rating must be between 0 and 10'),
+  body('contentRating')
+    .optional()
+    .trim()
+    .isIn(['g', 'pg', 'pg-13', 'r', 'nc-17'])
+    .withMessage('Invalid content rating'),
   body('poster')
     .trim()
     .isURL()

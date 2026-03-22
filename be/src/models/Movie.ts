@@ -27,6 +27,10 @@ const movieSchema = new Schema<any>(
       max: 10,
       required: [true, 'Please provide a rating'],
     },
+    contentRating: {
+      type: String,
+      enum: ['g', 'pg', 'pg-13', 'r', 'nc-17'],
+    },
     poster: {
       type: String,
       required: [true, 'Please provide a poster URL'],

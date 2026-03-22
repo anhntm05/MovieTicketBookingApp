@@ -3,9 +3,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AdminTabParamList } from '../types/navigation';
 import { AdminLayout } from '../components/AdminLayout';
 import { ProfileScreen } from '../screens/auth/ProfileScreen';
-import { DashboardScreen } from '../screens/admin/DashboardScreen';
 import { UsersScreen } from '../screens/admin/UsersScreen';
 import { CinemaConfigScreen } from '../screens/admin/CinemaConfigScreen';
+import { AdminMoviesStack } from './AdminMoviesStack';
+import { DashboardScreen } from '../screens/admin/DashboardScreen';
+import { RevenueStreamingScreen } from '../screens/admin/RevenueStreamingScreen';
 
 const Tab = createBottomTabNavigator<AdminTabParamList>();
 
@@ -18,6 +20,7 @@ const withAdminLayout =
   );
 
 const DashboardWithLayout = withAdminLayout(DashboardScreen);
+const RevenueWithLayout = withAdminLayout(RevenueStreamingScreen);
 const UsersWithLayout = withAdminLayout(UsersScreen);
 const CinemasWithLayout = withAdminLayout(CinemaConfigScreen as React.ComponentType<any>);
 const ProfileWithLayout = withAdminLayout(ProfileScreen);
@@ -32,6 +35,8 @@ export function AdminTabs() {
       tabBar={() => null}
     >
       <Tab.Screen name="Dashboard" component={DashboardWithLayout} />
+      <Tab.Screen name="Revenue" component={RevenueWithLayout} />
+      <Tab.Screen name="Movies" component={AdminMoviesStack} />
       <Tab.Screen name="Users" component={UsersWithLayout} />
       <Tab.Screen name="Cinemas" component={CinemasWithLayout} />
       <Tab.Screen name="Profile" component={ProfileWithLayout} />

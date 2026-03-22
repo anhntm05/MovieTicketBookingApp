@@ -6,6 +6,28 @@ import UserService from '../services/UserService';
 import logger from '../utils/logger';
 
 export class AdminController {
+  static async getMovieCatalog(req: Request, res: Response) {
+    try {
+      const movies = await AdminService.getMovieCatalog({
+        search: req.query.search as string | undefined,
+        sort: (req.query.sort as 'recent' | 'revenue' | 'title' | undefined) || 'recent',
+        status: req.query.status as string | undefined,
+      });
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: 'Movie catalog retrieved successfully',
+        data: movies,
+      });
+    } catch (error: any) {
+      logger.error('Get movie catalog error:', error);
+      res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   static async getDashboard(req: Request, res: Response) {
     try {
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
@@ -44,6 +66,25 @@ export class AdminController {
       });
     } catch (error: any) {
       logger.error('Get finance error:', error);
+      res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  static async getRevenueStream(req: Request, res: Response) {
+    try {
+      const range = (req.query.range as 'today' | '7d' | '30d') || 'today';
+      const revenueStream = await AdminService.getRevenueStream(range);
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: 'Revenue stream retrieved successfully',
+        data: revenueStream,
+      });
+    } catch (error: any) {
+      logger.error('Get revenue stream error:', error);
       res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: error.message,

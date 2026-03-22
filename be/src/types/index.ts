@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 export type UserRole = 'customer' | 'staff' | 'admin';
 export type UserStatus = 'active' | 'inactive' | 'blocked';
 export type MovieStatus = 'draft' | 'published' | 'archived';
+export type MovieContentRating = 'g' | 'pg' | 'pg-13' | 'r' | 'nc-17';
 export type CinemaStatus = 'active' | 'inactive';
 export type ScreenStatus = 'active' | 'maintenance';
 export type SeatType = 'standard' | 'vip' | 'premium';
@@ -53,6 +54,7 @@ export interface IMovie {
   duration: number;
   genre: string[];
   rating: number;
+  contentRating?: MovieContentRating;
   poster: string;
   trailer: string;
   releaseDate: Date;
@@ -69,6 +71,7 @@ export interface IMovieRequest {
   duration: number;
   genre: string[];
   rating: number;
+  contentRating?: MovieContentRating;
   poster: string;
   trailer: string;
   releaseDate: Date;
@@ -361,6 +364,66 @@ export interface IDashboardSummary {
     posterUrl?: string;
     genre?: string[];
   }>;
+}
+
+export interface IAdminMovieCatalogItem {
+  movieId: string;
+  title: string;
+  genre: string[];
+  duration: number;
+  status: MovieStatus;
+  posterUrl?: string;
+  releaseDate?: Date;
+  createdAt?: Date;
+  bookings: number;
+  showtimes: number;
+  revenue: number;
+}
+
+export interface IRevenueTrendPoint {
+  label: string;
+  revenue: number;
+}
+
+export interface IRevenueLiveTransaction {
+  id: string;
+  movie: string;
+  customer: string;
+  time: string;
+  amount: number;
+  status: 'SUCCESS' | 'FAILED' | 'REFUNDED';
+}
+
+export interface IRevenueTopPerformer {
+  id: string;
+  name: string;
+  revenue: number;
+}
+
+export interface IRevenueStreamSummary {
+  totalRevenue: number;
+  todayRevenue: number;
+  averageOrderValue: number;
+  completedPayments: number;
+  revenueChange: number;
+  todayChange: number;
+  completedChange: number;
+}
+
+export interface IRevenueStreamHealth {
+  refundRate: number;
+  failureRate: number;
+  alertTitle: string;
+  alertMessage: string;
+  alertSeverity: 'warning' | 'critical';
+}
+
+export interface IRevenueStreamData {
+  summary: IRevenueStreamSummary;
+  trend: IRevenueTrendPoint[];
+  health: IRevenueStreamHealth;
+  liveTransactions: IRevenueLiveTransaction[];
+  topPerformers: IRevenueTopPerformer[];
 }
 
 export interface IFinanceBreakdownItem {

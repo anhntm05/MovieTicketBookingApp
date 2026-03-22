@@ -31,8 +31,15 @@ export type StaffTabParamList = {
   Profile: undefined;
 };
 
+export type AdminMovieStackParamList = {
+  AdminMovieCatalog: undefined;
+  AdminMovieDetail: { movieId?: string } | undefined;
+};
+
 export type AdminTabParamList = {
   Dashboard: undefined;
+  Revenue: undefined;
+  Movies: NavigatorScreenParams<AdminMovieStackParamList> | undefined;
   Users: undefined;
   Cinemas: undefined;
   Profile: undefined;

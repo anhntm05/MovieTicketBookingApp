@@ -2,7 +2,7 @@ import React from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export type AdminTabName = 'Dashboard' | 'Users' | 'Cinemas' | 'Profile';
+export type AdminTabName = 'Dashboard' | 'Revenue' | 'Movies' | 'Users' | 'Cinemas' | 'Profile';
 
 interface AdminTabNavigationProps {
   activeTab?: AdminTabName;
@@ -15,6 +15,8 @@ const tabs: Array<{
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 }> = [
   { name: 'Dashboard', label: 'Overview', icon: 'view-dashboard-outline' },
+  { name: 'Revenue', label: 'Revenue', icon: 'finance' },
+  { name: 'Movies', label: 'Movies', icon: 'movie-open-outline' },
   { name: 'Users', label: 'Users', icon: 'account-group-outline' },
   { name: 'Cinemas', label: 'Cinemas', icon: 'movie-open-settings-outline' },
   { name: 'Profile', label: 'Profile', icon: 'account-circle-outline' },
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#110c14',
     borderRadius: 24,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: '#1a141e',
@@ -78,16 +80,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
     paddingVertical: 8,
-    borderRadius: 18,
+    borderRadius: 16,
   },
   tabButtonActive: {
     backgroundColor: '#f90680',
   },
   label: {
     color: '#8c8192',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
   },
   labelActive: {
