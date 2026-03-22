@@ -361,14 +361,8 @@ export class BookingService {
   }
 
   private static generateTicketQrValue(bookingId: string, bookingCode: string, transactionId: string): string {
-    const payload = JSON.stringify({
-      type: 'movie_ticket',
-      ticketId: bookingId,
-      bookingCode,
-      transactionId,
-    });
-
-    return Buffer.from(payload).toString('base64');
+    const transactionPart = transactionId || `TXN-${bookingCode}`;
+    return `${transactionPart}|TICKET-${bookingId}|BOOKING-${bookingCode}`;
   }
 }
 
