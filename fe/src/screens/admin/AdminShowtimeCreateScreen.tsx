@@ -290,20 +290,7 @@ export const AdminShowtimeCreateScreen: React.FC<Props> = ({ route, navigation }
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={refetch}
-          tintColor="#f90680"
-          colors={['#f90680']}
-          progressBackgroundColor="#1a141e"
-        />
-      }
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} activeOpacity={0.85} onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
@@ -316,6 +303,20 @@ export const AdminShowtimeCreateScreen: React.FC<Props> = ({ route, navigation }
           <View style={styles.statusDot} />
         </View>
       </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#f90680"
+            colors={['#f90680']}
+            progressBackgroundColor="#1a141e"
+          />
+        }
+      >
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Select Movie</Text>
@@ -486,7 +487,8 @@ export const AdminShowtimeCreateScreen: React.FC<Props> = ({ route, navigation }
           </View>
         </LinearGradient>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

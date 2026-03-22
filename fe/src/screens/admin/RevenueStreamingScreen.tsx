@@ -312,7 +312,7 @@ export const RevenueStreamingScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
 
-  const { data = DEFAULT_DATA, error, isLoading, refetch } = useQuery<RevenueStreamData>({
+  const { data = DEFAULT_DATA, error, isLoading, isRefetching, refetch } = useQuery<RevenueStreamData>({
     queryKey: ['admin-revenue-stream', range],
     queryFn: async () => {
       try {
@@ -405,6 +405,10 @@ export const RevenueStreamingScreen = () => {
 
   const maxRevenue = Math.max(...data.trend.map((item) => item.revenue), 1);
 
+  const handleReload = async () => {
+    await refetch({ cancelRefetch: true });
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
@@ -420,10 +424,19 @@ export const RevenueStreamingScreen = () => {
           <View style={styles.logoSquare}>
             <MaterialCommunityIcons name="finance" size={20} color={theme.colors.primary} />
           </View>
-          <Text style={styles.headerTitle}>REVENUE STREAMING</Text>
+          <Text style={styles.headerTitle}>REVENUE REPORT</Text>
         </View>
-        <TouchableOpacity style={styles.filterButton} activeOpacity={0.85} onPress={() => refetch()}>
-          <MaterialCommunityIcons name="refresh" size={22} color={theme.colors.text} />
+        <TouchableOpacity
+          style={styles.filterButton}
+          activeOpacity={0.85}
+          onPress={handleReload}
+          disabled={isRefetching}
+        >
+          {isRefetching ? (
+            <ActivityIndicator size="small" color={theme.colors.text} />
+          ) : (
+            <MaterialCommunityIcons name="refresh" size={22} color={theme.colors.text} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -655,7 +668,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: theme.colors.primary,
-    fontSize: 14,
+    fontSize: 24,
+    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
     letterSpacing: 1,
   },

@@ -282,7 +282,7 @@ export const DashboardScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <MaterialCommunityIcons name="movie-filter" size={24} color={theme.colors.primary} />
@@ -292,6 +292,8 @@ export const DashboardScreen = () => {
           <MaterialCommunityIcons name="account-circle-outline" size={28} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
       <View style={styles.gridRow}>
         <KPICard
@@ -468,7 +470,8 @@ export const DashboardScreen = () => {
           <Text style={styles.quickStatValue}>{dashboard.users.total}</Text>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -498,8 +501,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: theme.colors.primary,
-    fontSize: 14,
     fontFamily: theme.typography.fontFamilies.bold,
+    fontSize: 24,
+    fontWeight: 'bold',
     marginLeft: 10,
     letterSpacing: 1,
   },

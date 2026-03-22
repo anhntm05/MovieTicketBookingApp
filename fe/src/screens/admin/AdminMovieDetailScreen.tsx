@@ -264,7 +264,7 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.85}>
           <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text} />
@@ -275,10 +275,9 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
             {(form.title || 'Untitled release').toUpperCase()}
           </Text>
         </View>
-        <View style={styles.adminBadge}>
-          <Text style={styles.adminText}>{isCreateMode ? 'NEW' : 'LIVE EDIT'}</Text>
-        </View>
       </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
       <View style={styles.posterContainer}>
         {previewPoster ? (
@@ -481,11 +480,16 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
           <Text style={styles.discardText}>{isDirty ? 'DISCARD CHANGES' : 'BACK TO CATALOG'}</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -526,19 +530,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: theme.typography.fontFamilies.bold,
     marginTop: 4,
-  },
-  adminBadge: {
-    backgroundColor: '#1a141e',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2f2536',
-  },
-  adminText: {
-    color: theme.colors.text,
-    fontSize: 10,
-    fontFamily: theme.typography.fontFamilies.bold,
   },
   posterContainer: {
     height: 360,
@@ -773,3 +764,4 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamilies.bold,
   },
 });
+

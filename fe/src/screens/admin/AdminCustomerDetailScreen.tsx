@@ -27,7 +27,7 @@ type CustomerDetailResponse = {
     fullName: string;
     email: string;
     role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
-    status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+    status: 'ACTIVE' | 'BLOCKED';
     memberSince: string;
     tierLabel: string;
   };
@@ -79,7 +79,7 @@ const getInitials = (name: string) =>
     .map((part) => part[0]?.toUpperCase() || '')
     .join('');
 const getStatusColor = (status: CustomerDetailResponse['user']['status']) =>
-  status === 'ACTIVE' ? '#03DAC6' : status === 'BLOCKED' ? '#f90680' : '#F2C94C';
+  status === 'ACTIVE' ? '#03DAC6' : '#f90680';
 
 const StatCard = ({
   label,
@@ -152,7 +152,7 @@ export const AdminCustomerDetailScreen = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async (status: 'active' | 'inactive' | 'blocked') => apiClient.patch(`/admin/users/${userId}/status`, { status }),
+    mutationFn: async (status: 'active' | 'blocked') => apiClient.patch(`/admin/users/${userId}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-user-detail', userId] });
       queryClient.invalidateQueries({ queryKey: ['admin-users-analytics'] });
@@ -179,7 +179,6 @@ export const AdminCustomerDetailScreen = () => {
 
   const barMax = Math.max(1, ...data.spendingTrend.map((point) => point.amount));
   const statusColor = getStatusColor(data.user.status);
-  const deactivateLabel = data.user.status === 'INACTIVE' ? 'Activate Account' : 'Deactivate Account';
   const banLabel = data.user.status === 'BLOCKED' ? 'Restore Access' : 'Ban User';
 
   return (
@@ -304,10 +303,6 @@ export const AdminCustomerDetailScreen = () => {
         </View>
 
         <View style={styles.actionsSection}>
-          <TouchableOpacity style={styles.actionBtn} disabled={statusMutation.isPending} onPress={() => statusMutation.mutate(data.user.status === 'INACTIVE' ? 'active' : 'inactive')}>
-            <MaterialCommunityIcons name="account-cancel-outline" size={20} color="#fff" />
-            <Text style={styles.actionBtnText}>{deactivateLabel}</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.dangerBtn]} disabled={statusMutation.isPending} onPress={() => statusMutation.mutate(data.user.status === 'BLOCKED' ? 'active' : 'blocked')}>
             <MaterialCommunityIcons name="gavel" size={20} color="#fff" />
             <Text style={styles.actionBtnText}>{banLabel}</Text>
@@ -400,3 +395,4 @@ const styles = StyleSheet.create({
   emptyText: { color: '#777', fontSize: 13 },
   bottomSpacer: { height: 100 },
 });
+

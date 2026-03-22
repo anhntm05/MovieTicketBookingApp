@@ -44,7 +44,7 @@ const userSchema = new Schema<any, UserModel, IUserMethods>(
     },
     status: {
       type: String,
-      enum: [USER_STATUS.ACTIVE, USER_STATUS.INACTIVE, USER_STATUS.BLOCKED],
+      enum: [USER_STATUS.ACTIVE, USER_STATUS.BLOCKED],
       default: USER_STATUS.ACTIVE,
     },
   },
@@ -83,3 +83,4 @@ userSchema.methods.toJSON = function () {
 };
 
 export const User = model<IUser, UserModel>('User', userSchema);
+

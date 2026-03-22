@@ -257,42 +257,8 @@ export const AdminMoviesScreen = () => {
 
   const publishedCount = movies.filter((movie) => movie.status === 'PUBLISHED').length;
 
-  const renderHeader = () => (
+  const renderListHeader = () => (
     <View>
-      <View style={styles.header}>
-        <View style={styles.headerCopy}>
-          <Text style={styles.subtitle}>INVENTORY MANAGEMENT</Text>
-          <Text style={styles.title}>Movie Catalog</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={[styles.iconButton, styles.addButton]}
-            onPress={() => navigation.navigate('AdminMovieDetail')}
-            activeOpacity={0.85}
-          >
-            <MaterialCommunityIcons name="plus" size={20} color={theme.colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={() => refetch()} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="refresh" size={22} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={styles.createHero}
-        activeOpacity={0.88}
-        onPress={() => navigation.navigate('AdminMovieDetail')}
-      >
-        <View style={styles.createHeroIcon}>
-          <MaterialCommunityIcons name="movie-open-plus-outline" size={26} color={theme.colors.text} />
-        </View>
-        <View style={styles.createHeroCopy}>
-          <Text style={styles.createHeroLabel}>NEW RELEASE SLOT</Text>
-          <Text style={styles.createHeroTitle}>Create a movie detail page</Text>
-          <Text style={styles.createHeroText}>Add artwork, synopsis, metadata, and publish controls in one place.</Text>
-        </View>
-      </TouchableOpacity>
-
       <View style={styles.metaRow}>
         <View style={styles.metaPill}>
           <Text style={styles.metaPillLabel}>TOTAL TITLES</Text>
@@ -364,7 +330,7 @@ export const AdminMoviesScreen = () => {
               {item.title}
             </Text>
             <Text style={styles.movieMeta} numberOfLines={1}>
-              {(item.genre.slice(0, 2).join(' • ') || 'General Release').toUpperCase()} • {formatDuration(item.duration)}
+              {(item.genre.slice(0, 2).join(' � ') || 'General Release').toUpperCase()} • {formatDuration(item.duration)}
             </Text>
           </View>
           <View style={styles.metricBadge}>
@@ -412,11 +378,31 @@ export const AdminMoviesScreen = () => {
   }
 
   return (
-    <FlatList
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerCopy}>
+          <Text style={styles.subtitle}>INVENTORY MANAGEMENT</Text>
+          <Text style={styles.title}>Movie Catalog</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.iconButton, styles.addButton]}
+            onPress={() => navigation.navigate('AdminMovieDetail')}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons name="plus" size={20} color={theme.colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={() => refetch()} activeOpacity={0.85}>
+            <MaterialCommunityIcons name="refresh" size={22} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <FlatList
       data={movies}
       keyExtractor={(item) => item.movieId}
       renderItem={renderMovieCard}
-      ListHeaderComponent={renderHeader}
+      ListHeaderComponent={renderListHeader}
       ListFooterComponent={
         warning || error ? (
           <View style={styles.warningBanner}>
@@ -437,11 +423,16 @@ export const AdminMoviesScreen = () => {
           progressBackgroundColor={theme.colors.surface}
         />
       }
-    />
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -457,6 +448,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    paddingHorizontal: 20, 
     marginBottom: 16,
   },
   headerActions: {
@@ -476,6 +468,7 @@ const styles = StyleSheet.create({
   title: {
     color: theme.colors.text,
     fontSize: 32,
+    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
     marginTop: 6,
   },
@@ -511,12 +504,6 @@ const styles = StyleSheet.create({
   },
   createHeroCopy: {
     flex: 1,
-  },
-  createHeroLabel: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontFamily: theme.typography.fontFamilies.bold,
-    letterSpacing: 1.2,
   },
   createHeroTitle: {
     color: theme.colors.text,
@@ -771,3 +758,5 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamilies.medium,
   },
 });
+
+

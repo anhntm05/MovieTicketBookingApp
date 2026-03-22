@@ -200,20 +200,7 @@ export const AdminCinemaDetailScreen: React.FC<Props> = ({ route, navigation }) 
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={refetch}
-          tintColor={theme.colors.primary}
-          colors={[theme.colors.primary]}
-          progressBackgroundColor={theme.colors.surface}
-        />
-      }
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} activeOpacity={0.85} onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={22} color={theme.colors.text} />
@@ -232,7 +219,20 @@ export const AdminCinemaDetailScreen: React.FC<Props> = ({ route, navigation }) 
         </TouchableOpacity>
       </View>
 
-      <View style={styles.statsGrid}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+            progressBackgroundColor={theme.colors.surface}
+          />
+        }
+      >
+        <View style={styles.statsGrid}>
         <StatCard
           title="TOTAL REVENUE"
           value={formatMoney(data.summary.totalRevenue)}
@@ -401,7 +401,8 @@ export const AdminCinemaDetailScreen: React.FC<Props> = ({ route, navigation }) 
           <Text style={styles.detailButtonText}>ADD NEW SCREEN ROOM</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

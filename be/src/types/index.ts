@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
 export type UserRole = 'customer' | 'staff' | 'admin';
-export type UserStatus = 'active' | 'inactive' | 'blocked';
+export type UserStatus = 'active' | 'blocked';
 export type MovieStatus = 'draft' | 'published' | 'archived';
 export type MovieContentRating = 'g' | 'pg' | 'pg-13' | 'r' | 'nc-17';
 export type CinemaStatus = 'active' | 'inactive';
@@ -597,3 +597,4 @@ export interface ISeatHoldRequest {
   seatIds: string[];
   expiryMinutes?: number;
 }
+
