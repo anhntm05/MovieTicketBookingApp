@@ -21,7 +21,6 @@ export const USER_ROLES = {
 
 export const USER_STATUS = {
   ACTIVE: 'active',
-  INACTIVE: 'inactive',
   BLOCKED: 'blocked',
 };
 
@@ -137,3 +136,4 @@ export const SUCCESS_MESSAGES = {
   BOOKING_CANCELLED: 'Booking cancelled successfully',
   PAYMENT_PROCESSED: 'Payment processed successfully',
 };
+

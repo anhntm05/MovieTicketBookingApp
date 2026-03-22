@@ -275,9 +275,6 @@ export const AdminMovieDetailScreen = ({ navigation, route }: Props) => {
             {(form.title || 'Untitled release').toUpperCase()}
           </Text>
         </View>
-        <View style={styles.adminBadge}>
-          <Text style={styles.adminText}>{isCreateMode ? 'NEW' : 'LIVE EDIT'}</Text>
-        </View>
       </View>
 
       <View style={styles.posterContainer}>
@@ -527,19 +524,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamilies.bold,
     marginTop: 4,
   },
-  adminBadge: {
-    backgroundColor: '#1a141e',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2f2536',
-  },
-  adminText: {
-    color: theme.colors.text,
-    fontSize: 10,
-    fontFamily: theme.typography.fontFamilies.bold,
-  },
   posterContainer: {
     height: 360,
     borderRadius: 30,
@@ -773,3 +757,4 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamilies.bold,
   },
 });
+

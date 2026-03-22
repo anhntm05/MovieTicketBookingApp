@@ -27,11 +27,11 @@ import {
  */
 
 export class UserService {
+
   /**
    * Register a new user
    */
   static async register(userData: IUserRequest): Promise<{ user: Omit<IUser, 'password'>; token: string }> {
-    // Check if user already exists
     const existingUser = await User.findOne({ email: userData.email });
     if (existingUser) {
       const error: any = new Error(ERROR_MESSAGES.USER_EXISTS);
@@ -39,7 +39,6 @@ export class UserService {
       throw error;
     }
 
-    // Create new user
     const user = new User({
       ...userData,
       role: USER_ROLES.CUSTOMER,
@@ -47,14 +46,12 @@ export class UserService {
     });
     await user.save();
 
-    // Generate token
     const token = generateToken({
       userId: user._id!.toString(),
       email: user.email,
       role: user.role,
     });
 
-    // Return user without password
     const userWithoutPassword = user.toObject();
     delete (userWithoutPassword as any).password;
 
@@ -68,7 +65,6 @@ export class UserService {
    * Login user
    */
   static async login(email: string, password: string): Promise<{ user: Omit<IUser, 'password'>; token: string }> {
-    // Find user by email
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       const error: any = new Error(ERROR_MESSAGES.INVALID_CREDENTIALS);
@@ -82,7 +78,6 @@ export class UserService {
       throw error;
     }
 
-    // Check password
     const isPasswordMatch = await user.matchPassword(password);
     if (!isPasswordMatch) {
       const error: any = new Error(ERROR_MESSAGES.INVALID_CREDENTIALS);
@@ -90,14 +85,12 @@ export class UserService {
       throw error;
     }
 
-    // Generate token
     const token = generateToken({
       userId: user._id!.toString(),
       email: user.email,
       role: user.role,
     });
 
-    // Return user without password
     const userWithoutPassword = user.toObject();
     delete (userWithoutPassword as any).password;
 
@@ -107,9 +100,6 @@ export class UserService {
     };
   }
 
-  /**
-   * Get user by ID
-   */
   static async getUserById(userId: string): Promise<Omit<IUser, 'password'>> {
     const user = await User.findById(userId);
     if (!user) {
@@ -123,9 +113,6 @@ export class UserService {
     return userWithoutPassword as Omit<IUser, 'password'>;
   }
 
-  /**
-   * Update user profile
-   */
   static async updateProfile(
     userId: string,
     updateData: Partial<IUserRequest>
@@ -467,3 +454,4 @@ export class UserService {
 }
 
 export default UserService;
+

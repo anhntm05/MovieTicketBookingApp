@@ -122,7 +122,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   placeholderTextColor={theme.colors.textSecondary}
                   value={password}
                   onChangeText={setPassword}
@@ -155,33 +155,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.socialContainer}>
-            <TouchableOpacity
-              style={styles.socialButton}
-              activeOpacity={0.85}
-              onPress={() => Alert.alert('Not available', 'Google sign-in is not implemented yet.')}
-            >
-              <MaterialCommunityIcons name="google" size={20} color={theme.colors.text} />
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.socialButton}
-              activeOpacity={0.85}
-              onPress={() => Alert.alert('Not available', 'Apple sign-in is not implemented yet.')}
-            >
-              <MaterialCommunityIcons name="apple" size={20} color={theme.colors.text} />
-              <Text style={styles.socialButtonText}>Apple</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don’t have an account? </Text>
+            <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity activeOpacity={0.85} onPress={() => navigation.navigate('Register')}>
               <Text style={styles.footerLink}>Create Account</Text>
             </TouchableOpacity>
@@ -319,45 +294,6 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontSize: 18,
     fontFamily: theme.typography.fontFamilies.bold,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#251d2a',
-  },
-  dividerText: {
-    color: theme.colors.textSecondary,
-    paddingHorizontal: 15,
-    fontSize: 12,
-    fontFamily: theme.typography.fontFamilies.bold,
-  },
-  socialContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 40,
-    gap: 12,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: theme.colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#251d2a',
-  },
-  socialButtonText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontFamily: theme.typography.fontFamilies.bold,
-    marginLeft: 10,
   },
   footer: {
     flexDirection: 'row',

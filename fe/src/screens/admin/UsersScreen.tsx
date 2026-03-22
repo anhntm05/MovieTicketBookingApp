@@ -25,7 +25,7 @@ type DirectoryUser = {
   fullName: string;
   email: string;
   role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
-  status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+  status: 'ACTIVE' | 'BLOCKED';
 };
 
 type UserAnalyticsResponse = {
@@ -123,7 +123,7 @@ const UserRow = ({
   user: DirectoryUser;
   onPress: () => void;
 }) => {
-  const statusColor = user.status === 'ACTIVE' ? '#03DAC6' : user.status === 'BLOCKED' ? '#f90680' : '#F2C94C';
+  const statusColor = user.status === 'ACTIVE' ? '#03DAC6' : '#f90680';
 
   return (
     <TouchableOpacity style={styles.userRow} activeOpacity={0.88} onPress={onPress}>
@@ -398,3 +398,4 @@ const styles = StyleSheet.create({
   errorText: { color: '#fff', flex: 1 },
   bottomSpacer: { height: 100 },
 });
+

@@ -60,6 +60,7 @@ export const validateUserLogin = [
     .withMessage('Password is required'),
 ];
 
+
 export const validateUserUpdate = [
   body('name')
     .optional()
@@ -92,7 +93,7 @@ export const validateUserRoleUpdate = [
 export const validateUserStatusUpdate = [
   body('status')
     .trim()
-    .isIn(['active', 'inactive', 'blocked'])
+    .isIn(['active', 'blocked'])
     .withMessage('Invalid status'),
 ];
 
@@ -370,3 +371,4 @@ export default {
   validateCommentReply,
   validateCommentStatusUpdate,
 };
+

@@ -286,9 +286,7 @@ export const AdminMoviesScreen = () => {
         <View style={styles.createHeroIcon}>
           <MaterialCommunityIcons name="movie-open-plus-outline" size={26} color={theme.colors.text} />
         </View>
-        <View style={styles.createHeroCopy}>
-          <Text style={styles.createHeroLabel}>NEW RELEASE SLOT</Text>
-          <Text style={styles.createHeroTitle}>Create a movie detail page</Text>
+        <View style={styles.createHeroCopy}>          <Text style={styles.createHeroTitle}>Create a movie detail page</Text>
           <Text style={styles.createHeroText}>Add artwork, synopsis, metadata, and publish controls in one place.</Text>
         </View>
       </TouchableOpacity>
@@ -476,6 +474,7 @@ const styles = StyleSheet.create({
   title: {
     color: theme.colors.text,
     fontSize: 32,
+    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
     marginTop: 6,
   },
@@ -511,12 +510,6 @@ const styles = StyleSheet.create({
   },
   createHeroCopy: {
     flex: 1,
-  },
-  createHeroLabel: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontFamily: theme.typography.fontFamilies.bold,
-    letterSpacing: 1.2,
   },
   createHeroTitle: {
     color: theme.colors.text,
@@ -771,3 +764,4 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamilies.medium,
   },
 });
+

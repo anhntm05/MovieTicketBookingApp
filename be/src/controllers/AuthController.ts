@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { HTTP_STATUS, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../utils/constants';
+import { HTTP_STATUS, SUCCESS_MESSAGES } from '../utils/constants';
 import { IApiResponse } from '../types';
 import UserService from '../services/UserService';
 import logger from '../utils/logger';
