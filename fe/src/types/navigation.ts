@@ -43,11 +43,16 @@ export type AdminCinemaStackParamList = {
   AdminScreenRoomCreate: { cinemaId: string };
 };
 
+export type AdminUserStackParamList = {
+  AdminUserDirectory: undefined;
+  AdminCustomerDetail: { userId: string };
+};
+
 export type AdminTabParamList = {
   Dashboard: undefined;
   Revenue: undefined;
   Movies: NavigatorScreenParams<AdminMovieStackParamList> | undefined;
-  Users: undefined;
+  Users: NavigatorScreenParams<AdminUserStackParamList> | undefined;
   Cinemas: NavigatorScreenParams<AdminCinemaStackParamList> | undefined;
   Profile: undefined;
 };

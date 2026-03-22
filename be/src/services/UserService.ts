@@ -1,17 +1,26 @@
 import { User } from '../models/User';
 import { Booking } from '../models/Booking';
 import { Payment } from '../models/Payment';
+import { Comment } from '../models/Comment';
 import { generateToken } from '../utils/jwt';
 import {
   ICreateStaffRequest,
+  IUserDetailPayload,
   IUser,
   IUserAnalyticsPayload,
-  IUserAnalyticsSelectedUser,
   IUserRequest,
   UserRole,
   UserStatus,
 } from '../types';
-import { ERROR_MESSAGES, PAGINATION, PAYMENT_STATUS, USER_ROLES, USER_STATUS } from '../utils/constants';
+import {
+  BOOKING_STATUS,
+  COMMENT_STATUS,
+  ERROR_MESSAGES,
+  PAGINATION,
+  PAYMENT_STATUS,
+  USER_ROLES,
+  USER_STATUS,
+} from '../utils/constants';
 
 /**
  * User Service - Handles user related business logic
@@ -225,7 +234,7 @@ export class UserService {
   static async getUserAnalytics(
     page: number = PAGINATION.DEFAULT_PAGE,
     limit: number = PAGINATION.DEFAULT_LIMIT,
-    filters?: { role?: UserRole; status?: UserStatus; search?: string; userId?: string }
+    filters?: { role?: UserRole; status?: UserStatus; search?: string }
   ): Promise<IUserAnalyticsPayload> {
     const query: any = {};
 
@@ -278,8 +287,6 @@ export class UserService {
       status: user.status.toUpperCase() as Uppercase<UserStatus>,
     }));
 
-    const selectedUserId = filters?.userId || directory[0]?.id;
-    const selectedUser = selectedUserId ? await this.getUserAnalyticsDetail(selectedUserId) : undefined;
     const totalPurchasers = completedPurchaserGroups[0]?.total || 0;
 
     return {
@@ -293,7 +300,6 @@ export class UserService {
         userGrowthRate: this.calculateGrowth(currentMonthUsers, previousMonthUsers),
       },
       directory,
-      selectedUser,
       pagination: {
         page,
         limit,
@@ -303,10 +309,12 @@ export class UserService {
     };
   }
 
-  private static async getUserAnalyticsDetail(userId: string): Promise<IUserAnalyticsSelectedUser | undefined> {
+  static async getUserDetail(userId: string): Promise<IUserDetailPayload> {
     const user = await User.findById(userId);
     if (!user) {
-      return undefined;
+      const error: any = new Error(ERROR_MESSAGES.USER_NOT_FOUND);
+      error.statusCode = 404;
+      throw error;
     }
 
     const bookings = await Booking.find({ user: userId })
@@ -321,6 +329,7 @@ export class UserService {
           },
         ],
       })
+      .sort({ createdAt: -1 })
       .lean();
 
     const bookingIds = bookings.map((booking: any) => booking._id);
@@ -332,45 +341,80 @@ export class UserService {
           .sort({ paidAt: -1 })
           .lean()
       : [];
+    const comments = await Comment.find({
+      user: userId,
+      status: COMMENT_STATUS.APPROVED,
+    })
+      .populate('movie', 'title')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const bookingMap = new Map(bookings.map((booking: any) => [booking._id.toString(), booking]));
     const totalSpent = payments.reduce((sum, payment: any) => sum + Number(payment.amount || 0), 0);
     const paidBookingIds = new Set(payments.map((payment: any) => payment.booking.toString()));
-    const tickets = bookings
-      .filter((booking: any) => paidBookingIds.has(booking._id.toString()) || booking.paymentStatus === PAYMENT_STATUS.COMPLETED)
-      .reduce((sum, booking: any) => sum + (Array.isArray(booking.seats) ? booking.seats.length : 0), 0);
-
-    const cinemaCounts = new Map<string, number>();
-    for (const booking of bookings as any[]) {
-      const cinemaName = booking.showtime?.screen?.cinema?.name;
-      if (!cinemaName) continue;
-      cinemaCounts.set(cinemaName, (cinemaCounts.get(cinemaName) || 0) + 1);
-    }
-
-    const favoriteCinema =
-      Array.from(cinemaCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || 'No favorite cinema yet';
-
-    const recentPurchases = payments.slice(0, 5).map((payment: any) => {
-      const booking = bookingMap.get(payment.booking.toString());
-
-      return {
-        id: payment._id!.toString(),
-        title: booking?.showtime?.movie?.title || 'Untitled movie',
-        date: payment.paidAt || payment.createdAt || new Date(),
-        price: Number(payment.amount || 0),
-      };
-    });
+    const paidBookings = bookings.filter(
+      (booking: any) =>
+        paidBookingIds.has(booking._id.toString()) || booking.paymentStatus === PAYMENT_STATUS.COMPLETED
+    );
+    const tickets = paidBookings.reduce(
+      (sum, booking: any) => sum + (Array.isArray(booking.seats) ? booking.seats.length : 0),
+      0
+    );
+    const totalBookings = bookings.length;
+    const cancelledBookings = bookings.filter((booking: any) => booking.status === BOOKING_STATUS.CANCELLED).length;
+    const cancellationRate = totalBookings ? Number(((cancelledBookings / totalBookings) * 100).toFixed(1)) : 0;
+    const commentCount = comments.length;
+    const latestFeedback = comments[0]
+      ? {
+          id: comments[0]._id!.toString(),
+          movieTitle: comments[0].movie && typeof comments[0].movie === 'object' ? (comments[0].movie as any).title || 'Untitled movie' : 'Untitled movie',
+          rating: Number(comments[0].rating || 0),
+          content: comments[0].content || '',
+          createdAt: comments[0].createdAt || new Date(),
+        }
+      : undefined;
+    const tier = this.getTierMeta(totalSpent, tickets);
+    const recentBookings = bookings.slice(0, 5).map((booking: any) => ({
+      id: booking._id!.toString(),
+      title: booking.showtime?.movie?.title || 'Untitled movie',
+      date: booking.showtime?.startTime || booking.createdAt || new Date(),
+      hall: booking.showtime?.screen?.name || 'Screen TBD',
+      status: String(booking.status || BOOKING_STATUS.PENDING_PAYMENT).toUpperCase() as
+        | 'CONFIRMED'
+        | 'CANCELLED'
+        | 'PENDING_PAYMENT'
+        | 'EXPIRED',
+      posterUrl: booking.showtime?.movie?.poster || undefined,
+    }));
+    const spendingTrend = this.buildSpendingTrend(payments);
+    const monthsCovered = Math.max(1, spendingTrend.length);
+    const averageTicketValue = tickets ? Number((totalSpent / tickets).toFixed(2)) : 0;
+    const frequencyPerMonth = Number((paidBookings.length / monthsCovered).toFixed(1));
 
     return {
-      id: user._id!.toString(),
-      fullName: user.name,
-      email: user.email,
-      role: user.role.toUpperCase() as Uppercase<UserRole>,
-      status: user.status.toUpperCase() as Uppercase<UserStatus>,
-      totalSpent,
-      tickets,
-      favoriteCinema,
-      recentPurchases,
+      user: {
+        id: user._id!.toString(),
+        fullName: user.name,
+        email: user.email,
+        role: user.role.toUpperCase() as Uppercase<UserRole>,
+        status: user.status.toUpperCase() as Uppercase<UserStatus>,
+        memberSince: user.createdAt || new Date(),
+        tierLabel: tier.badgeLabel,
+      },
+      stats: {
+        totalSpent,
+        totalBookings,
+        cancellationRate,
+        commentCount,
+      },
+      recentBookings,
+      latestFeedback,
+      spendingTrend,
+      loyalty: {
+        tierLabel: tier.progressLabel,
+        progressPercent: tier.progressPercent,
+        frequencyPerMonth,
+        averageTicketValue,
+      },
     };
   }
 
@@ -380,6 +424,45 @@ export class UserService {
     }
 
     return Number((((current - previous) / previous) * 100).toFixed(1));
+  }
+
+  private static buildSpendingTrend(payments: any[]) {
+    const now = new Date();
+    const points = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
+      return {
+        key: `${date.getFullYear()}-${date.getMonth()}`,
+        label: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        amount: 0,
+      };
+    });
+    const pointMap = new Map(points.map((point) => [point.key, point]));
+
+    for (const payment of payments) {
+      const paidAt = new Date(payment.paidAt || payment.createdAt || Date.now());
+      const key = `${paidAt.getFullYear()}-${paidAt.getMonth()}`;
+      const point = pointMap.get(key);
+      if (!point) continue;
+      point.amount += Number(payment.amount || 0);
+    }
+
+    return points.map(({ label, amount }) => ({ label, amount }));
+  }
+
+  private static getTierMeta(totalSpent: number, tickets: number) {
+    const score = totalSpent + tickets * 25;
+
+    if (score >= 2500) {
+      return { badgeLabel: 'VIP MEMBER', progressLabel: 'Platinum Noir', progressPercent: 100 };
+    }
+    if (score >= 1600) {
+      return { badgeLabel: 'GOLD MEMBER', progressLabel: 'Gold Elite', progressPercent: 85 };
+    }
+    if (score >= 800) {
+      return { badgeLabel: 'SILVER MEMBER', progressLabel: 'Silver Select', progressPercent: 62 };
+    }
+
+    return { badgeLabel: 'RISING MEMBER', progressLabel: 'Bronze Circle', progressPercent: 34 };
   }
 }
 
