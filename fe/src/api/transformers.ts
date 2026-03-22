@@ -1,4 +1,5 @@
 import { AxiosResponse } from 'axios';
+import { CONFIG } from '../constants/config';
 import {
   Booking,
   BookingConcession,
@@ -6,6 +7,7 @@ import {
   Comment,
   CommentReply,
   Movie,
+  MovieContentRating,
   Notification,
   Screen,
   SeatAvailability,
@@ -53,6 +55,40 @@ const upperSnake = (value?: string): string =>
 
 const ensureArray = <T>(value: T[] | undefined | null): T[] => (Array.isArray(value) ? value : []);
 
+const normalizeContentRating = (value: unknown): MovieContentRating | undefined => {
+  const raw = String(value || '').trim().toUpperCase();
+
+  switch (raw) {
+    case 'G':
+    case 'PG':
+    case 'R':
+      return raw;
+    case 'PG_13':
+    case 'PG-13':
+      return 'PG-13';
+    case 'NC_17':
+    case 'NC-17':
+      return 'NC-17';
+    default:
+      return undefined;
+  }
+};
+
+export const resolveMediaUrl = (value?: string) => {
+  const raw = value?.trim();
+
+  if (!raw) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) {
+    return raw;
+  }
+
+  const apiOrigin = CONFIG.API_BASE_URL.replace(/\/api\/?$/, '');
+  return raw.startsWith('/') ? `${apiOrigin}${raw}` : `${apiOrigin}/${raw}`;
+};
+
 const normalizeCommentUser = (raw: unknown) => {
   const user = toRecord(raw);
   const id = getId(user);
@@ -94,7 +130,8 @@ export const normalizeMovie = (raw: unknown): Movie => {
     duration: Number(movie.duration || 0),
     genre: ensureArray<string>(movie.genre).map(String),
     rating: Number(movie.rating || 0),
-    posterUrl: String(movie.posterUrl || movie.poster || ''),
+    contentRating: normalizeContentRating(movie.contentRating),
+    posterUrl: resolveMediaUrl(String(movie.posterUrl || movie.poster || '')),
     trailerUrl: String(movie.trailerUrl || movie.trailer || ''),
     status: (upperSnake(movie.status) || 'PUBLISHED') as Movie['status'],
     releaseDate: movie.releaseDate ? new Date(movie.releaseDate).toISOString() : '',
@@ -210,7 +247,7 @@ export const normalizeTicketDetail = (raw: unknown): TicketDetail => {
     movie: {
       id: getId(movie),
       title: String(movie.title || ''),
-      posterUrl: String(movie.posterUrl || movie.poster || ''),
+      posterUrl: resolveMediaUrl(String(movie.posterUrl || movie.poster || '')),
       duration: Number(movie.duration || 0),
       genre: ensureArray<string>(movie.genre).map(String),
     },

@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../api/client';
-import { unwrapApiData } from '../../api/transformers';
+import { resolveMediaUrl, unwrapApiData } from '../../api/transformers';
 import { theme } from '../../constants/theme';
 import { AdminTabParamList } from '../../types/navigation';
 
@@ -209,6 +209,10 @@ export const DashboardScreen = () => {
   const dashboard = data?.dashboard ?? DEFAULT_SUMMARY;
   const previous = data?.previous ?? DEFAULT_SUMMARY;
   const finance = data?.finance ?? [];
+  const topMovies = dashboard.topMovies.map((movie) => ({
+    ...movie,
+    posterUrl: resolveMediaUrl(movie.posterUrl),
+  }));
 
   const revenueChange = formatPercentChange(dashboard.payments.totalRevenue, previous.payments.totalRevenue);
   const confirmedChange = formatPercentChange(dashboard.bookings.confirmed, previous.bookings.confirmed);
@@ -282,7 +286,7 @@ export const DashboardScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <MaterialCommunityIcons name="movie-filter" size={24} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>NEON NOCTURNE ADMIN</Text>
+          <Text style={styles.headerTitle}>DASHBOARD</Text>
         </View>
         <TouchableOpacity style={styles.profileButton} activeOpacity={0.85} onPress={() => navigation.navigate('Profile')}>
           <MaterialCommunityIcons name="account-circle-outline" size={28} color={theme.colors.text} />
@@ -413,13 +417,13 @@ export const DashboardScreen = () => {
           <Text style={styles.metaPill}>{dashboard.cinemas} cinemas live</Text>
         </View>
 
-        {dashboard.topMovies.length ? (
-          dashboard.topMovies.map((movie, index) => (
+        {topMovies.length ? (
+          topMovies.map((movie, index) => (
             <View
               key={movie.movieId}
               style={[
                 styles.movieRow,
-                index === dashboard.topMovies.length - 1 && styles.movieRowLast,
+                index === topMovies.length - 1 && styles.movieRowLast,
               ]}
             >
               <View style={styles.movieInfo}>

@@ -15,8 +15,10 @@ const router = express.Router();
 
 router.use(authenticate, authorizeRoles(USER_ROLES.ADMIN));
 
+router.get('/movies', AdminController.getMovieCatalog);
 router.get('/dashboard', AdminController.getDashboard);
 router.get('/finance', AdminController.getFinance);
+router.get('/revenue-stream', AdminController.getRevenueStream);
 router.get('/users', AdminController.listUsers);
 router.post('/staff', validateCreateStaff, validationHandler, AdminController.createStaff);
 router.patch('/users/:id/role', validateUserRoleUpdate, validationHandler, AdminController.updateUserRole);

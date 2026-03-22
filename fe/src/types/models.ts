@@ -1,3 +1,5 @@
+export type MovieContentRating = 'G' | 'PG' | 'PG-13' | 'R' | 'NC-17';
+
 export interface Movie {
   id: string;
   title: string;
@@ -5,6 +7,7 @@ export interface Movie {
   duration: number; // in minutes
   genre?: string[];
   rating?: number;
+  contentRating?: MovieContentRating;
   posterUrl: string;
   trailerUrl?: string;
   status: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';

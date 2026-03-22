@@ -7,9 +7,10 @@ import { AdminTabName, AdminTabNavigation } from './AdminTabNavigation';
 interface AdminLayoutProps {
   children: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
+  activeTabOverride?: AdminTabName;
 }
 
-const adminTabs: AdminTabName[] = ['Dashboard', 'Users', 'Cinemas', 'Profile'];
+const adminTabs: AdminTabName[] = ['Dashboard', 'Revenue', 'Movies', 'Users', 'Cinemas', 'Profile'];
 
 const isAdminTab = (routeName?: string): routeName is AdminTabName =>
   adminTabs.includes(routeName as AdminTabName);
@@ -29,12 +30,23 @@ const findActiveTab = (state: any): AdminTabName => {
   return 'Dashboard';
 };
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, contentStyle }) => {
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, contentStyle, activeTabOverride }) => {
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const activeTab = isAdminTab(route.name) ? route.name : findActiveTab(navigation.getState());
+  const activeTab = activeTabOverride || (isAdminTab(route.name) ? route.name : findActiveTab(navigation.getState()));
 
   const handleTabPress = (tabName: AdminTabName) => {
+    let currentNavigation: any = navigation;
+
+    while (currentNavigation) {
+      const state = currentNavigation.getState?.();
+      if (state?.routeNames?.includes(tabName)) {
+        currentNavigation.navigate(tabName);
+        return;
+      }
+      currentNavigation = currentNavigation.getParent?.();
+    }
+
     navigation.navigate(tabName);
   };
 
