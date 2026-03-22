@@ -114,7 +114,8 @@ export const BookingsScreen = () => {
       const data = unwrapApiData<unknown[]>(await apiClient.get('/bookings/me'));
       return data.map(normalizeBooking);
     },
-    refetchInterval: 5000,
+    refetchInterval: (query) =>
+      query.state.data?.some((booking) => booking.status === 'PENDING_PAYMENT') ? 5000 : false,
   });
 
   const filteredBookings = (bookings ?? []).filter((booking) => {

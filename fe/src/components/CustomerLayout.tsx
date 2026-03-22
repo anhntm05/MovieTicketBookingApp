@@ -63,7 +63,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
   const unreadCount = notifications.filter((notification) => notification.unread).length;
 
   const handleTabPress = (tabName: MainTabName) => {
-    navigation.navigate('CustomerMain', { screen: tabName });
+    navigation.navigate('Tabs', { screen: tabName });
   };
 
   const handleOpenNotifications = () => {

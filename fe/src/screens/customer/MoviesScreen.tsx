@@ -1,4 +1,4 @@
-import React, { useDeferredValue, useMemo, useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -11,14 +11,15 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../../api/client';
-import { normalizeMovie, unwrapApiData } from '../../api/transformers';
-import { Movie } from '../../types/models';
+import { normalizeCinema, normalizeMovie, normalizeShowtime, unwrapApiData } from '../../api/transformers';
+import { Cinema, Movie, Showtime } from '../../types/models';
 import { useAuthStore } from '../../store/authStore';
+import { CustomerTabParamList } from '../../types/navigation';
 
 const ACCENT = '#f90680';
 const BACKGROUND = '#0f0a12';
@@ -50,11 +51,36 @@ const formatGenreLabel = (genre: string) =>
 
 export const MoviesScreen = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<CustomerTabParamList, 'Movies'>>();
   const { width } = useWindowDimensions();
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState('All');
+  const [activeCinemaId, setActiveCinemaId] = useState('All');
+  const [activeCinemaName, setActiveCinemaName] = useState('All Cinemas');
   const deferredSearchQuery = useDeferredValue(searchQuery.trim());
+
+  useEffect(() => {
+    const cinemaId = route.params?.cinemaId;
+    const cinemaName = route.params?.cinemaName;
+
+    if (cinemaId) {
+      setActiveCinemaId(cinemaId);
+      setActiveCinemaName(cinemaName || 'Selected Cinema');
+      return;
+    }
+
+    setActiveCinemaId('All');
+    setActiveCinemaName('All Cinemas');
+  }, [route.params?.cinemaId, route.params?.cinemaName]);
+
+  const { data: cinemas = [] } = useQuery<Cinema[]>({
+    queryKey: ['movies', 'cinemas'],
+    queryFn: async () => {
+      const data = unwrapApiData<unknown[]>(await apiClient.get('/cinemas?status=active&limit=100'));
+      return data.map(normalizeCinema);
+    },
+  });
 
   const { data: genreSourceMovies = [] } = useQuery<Movie[]>({
     queryKey: ['movies', 'genres'],
@@ -62,6 +88,18 @@ export const MoviesScreen = () => {
       const data = unwrapApiData<unknown[]>(await apiClient.get('/movies?status=published&limit=100'));
       return data.map(normalizeMovie);
     },
+  });
+
+  const { data: cinemaShowtimes = [], isFetching: isFetchingCinemaFilter } = useQuery<Showtime[]>({
+    queryKey: ['movies', 'cinema-filter', activeCinemaId],
+    enabled: activeCinemaId !== 'All',
+    queryFn: async () => {
+      const data = unwrapApiData<unknown[]>(
+        await apiClient.get(`/showtimes?cinema=${activeCinemaId}&status=scheduled&limit=100`)
+      );
+      return data.map(normalizeShowtime);
+    },
+    placeholderData: (previousData) => previousData,
   });
 
   const { data: movies = [], isLoading, isFetching, isError, refetch, isRefetching } = useQuery<Movie[]>({
@@ -108,6 +146,30 @@ export const MoviesScreen = () => {
       ...Array.from(uniqueGenres.values()).sort((a, b) => a.label.localeCompare(b.label)),
     ];
   }, [genreSourceMovies]);
+
+  const cinemaOptions = useMemo(
+    () => [
+      { value: 'All', label: 'All Cinemas' },
+      ...cinemas.map((cinema) => ({ value: cinema.id, label: cinema.name })),
+    ],
+    [cinemas]
+  );
+
+  const cinemaMovieIds = useMemo(() => {
+    if (activeCinemaId === 'All') {
+      return null;
+    }
+
+    return new Set(cinemaShowtimes.map((showtime) => showtime.movieId).filter(Boolean));
+  }, [activeCinemaId, cinemaShowtimes]);
+
+  const visibleMovies = useMemo(() => {
+    if (!cinemaMovieIds) {
+      return movies;
+    }
+
+    return movies.filter((movie) => cinemaMovieIds.has(movie.id));
+  }, [cinemaMovieIds, movies]);
 
   const cardWidth = (width - 60) / 2;
 
@@ -163,9 +225,29 @@ export const MoviesScreen = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-            {isFetching ? <ActivityIndicator size="small" color={ACCENT} /> : null}
+            {isFetching || isFetchingCinemaFilter ? <ActivityIndicator size="small" color={ACCENT} /> : null}
           </View>
         </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.genreScroll}>
+          {cinemaOptions.map((cinema) => {
+            const isActive = activeCinemaId === cinema.value;
+
+            return (
+              <TouchableOpacity
+                key={cinema.value}
+                onPress={() => {
+                  setActiveCinemaId(cinema.value);
+                  setActiveCinemaName(cinema.label);
+                }}
+                style={[styles.genreTab, isActive && styles.activeGenreTab]}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.genreText, isActive && styles.activeGenreText]}>{cinema.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.genreScroll}>
           {genreOptions.map((genre) => {
@@ -185,8 +267,11 @@ export const MoviesScreen = () => {
         </ScrollView>
 
         <View style={styles.summaryRow}>
-          <Text style={styles.pageTitle}>All Movies</Text>
-          <Text style={styles.countText}>{movies.length} results</Text>
+          <View style={styles.summaryTextGroup}>
+            <Text style={styles.pageTitle}>All Movies</Text>
+            <Text style={styles.filterCaption}>{activeCinemaName}</Text>
+          </View>
+          <Text style={styles.countText}>{visibleMovies.length} results</Text>
         </View>
 
         {isError ? (
@@ -196,9 +281,9 @@ export const MoviesScreen = () => {
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
           </View>
-        ) : movies.length > 0 ? (
+        ) : visibleMovies.length > 0 ? (
           <View style={styles.movieGrid}>
-            {movies.map((movie) => (
+            {visibleMovies.map((movie) => (
               <TouchableOpacity
                 key={movie.id}
                 style={[styles.card, { width: cardWidth }]}
@@ -351,10 +436,20 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     marginBottom: 18,
   },
+  summaryTextGroup: {
+    flex: 1,
+    paddingRight: 12,
+  },
   pageTitle: {
     color: '#fff',
     fontSize: 30,
     fontWeight: 'bold',
+  },
+  filterCaption: {
+    color: ACCENT,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
   },
   countText: {
     color: ACCENT,

@@ -12,6 +12,8 @@ export type RootStackParamList = {
 export type CustomerStackParamList = {
   Tabs: NavigatorScreenParams<CustomerTabParamList> | undefined;
   MovieDetail: { movieId: string };
+  CinemaDetail: { cinemaId: string };
+  CinemaSchedule: { cinemaId: string };
   SeatSelection: { showtimeId: string };
   BookingPayment: {
     bookingId?: string;
@@ -27,7 +29,7 @@ export type CustomerStackParamList = {
 
 export type CustomerTabParamList = {
   Home: undefined;
-  Movies: undefined;
+  Movies: { cinemaId?: string; cinemaName?: string } | undefined;
   Cinemas: undefined;
   Bookings: undefined;
   Profile: undefined;
