@@ -80,8 +80,15 @@ export class ShowtimeService {
   }
 
   static async createShowtime(showtimeData: IShowtimeRequest, actorId?: string): Promise<IShowtime> {
+    const now = new Date();
     const startTime = new Date(showtimeData.startTime);
     const endTime = new Date(showtimeData.endTime);
+
+    if (startTime <= now) {
+      const error: any = new Error('Start time must be later than now');
+      error.statusCode = 400;
+      throw error;
+    }
 
     if (endTime <= startTime) {
       const error: any = new Error('End time must be after start time');
