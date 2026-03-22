@@ -140,7 +140,7 @@ export const ProfileScreen = () => {
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => {
             if (navigation.canGoBack()) {
@@ -149,9 +149,9 @@ export const ProfileScreen = () => {
           }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerSpacer} />
+        {/* <View style={styles.headerSpacer} /> */}
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -323,13 +323,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
   headerTitle: {
     color: theme.colors.text,
     fontSize: 20,
+    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
   },
   headerSpacer: {

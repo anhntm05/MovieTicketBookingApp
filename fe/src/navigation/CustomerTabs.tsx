@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { MainTabName, MainTabNavigation } from '../components/MainTabNavigation';
 import { ProfileScreen } from '../screens/auth/ProfileScreen';
 import { HomeScreen } from '../screens/customer/HomeScreen';
+import { MoviesScreen } from '../screens/customer/MoviesScreen';
 import { CinemasScreen } from '../screens/customer/CinemasScreen';
 import { BookingsScreen } from '../screens/customer/BookingsScreen';
 
@@ -27,6 +28,7 @@ export function CustomerTabs() {
       )}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Movies" component={MoviesScreen} />
       <Tab.Screen name="Cinemas" component={CinemasScreen} />
       {isAuthenticated && (
         <Tab.Screen name="Bookings" component={BookingsScreen} />

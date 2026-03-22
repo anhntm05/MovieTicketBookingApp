@@ -4,6 +4,8 @@ import { CustomerStackParamList } from '../types/navigation';
 import { useAuthStore } from '../store/authStore';
 import { CustomerTabs } from './CustomerTabs';
 import { MovieDetailScreen } from '../screens/customer/MovieDetailScreen';
+import { CinemaDetailScreen } from '../screens/customer/CinemaDetailScreen';
+import { CinemaScheduleScreen } from '../screens/customer/CinemaScheduleScreen';
 import { SeatSelectionScreen } from '../screens/customer/SeatSelectionScreen';
 import { BookingPaymentScreen } from '../screens/customer/BookingPaymentScreen';
 import { TicketDetailScreen } from '../screens/customer/TicketDetailScreen';
@@ -24,6 +26,8 @@ export function CustomerStack() {
     >
       <Stack.Screen name="Tabs" component={CustomerTabs} />
       <Stack.Screen name="MovieDetail" component={MovieDetailScreen as any} />
+      <Stack.Screen name="CinemaDetail" component={CinemaDetailScreen as any} />
+      <Stack.Screen name="CinemaSchedule" component={CinemaScheduleScreen as any} />
       <Stack.Screen name="SeatSelection" component={SeatSelectionScreen as any} />
       <Stack.Screen name="Notifications" component={NotificationsScreen as any} />
       {isAuthenticated && (

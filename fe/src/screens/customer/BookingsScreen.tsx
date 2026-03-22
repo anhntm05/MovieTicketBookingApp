@@ -114,7 +114,8 @@ export const BookingsScreen = () => {
       const data = unwrapApiData<unknown[]>(await apiClient.get('/bookings/me'));
       return data.map(normalizeBooking);
     },
-    refetchInterval: 5000,
+    refetchInterval: (query) =>
+      query.state.data?.some((booking) => booking.status === 'PENDING_PAYMENT') ? 5000 : false,
   });
 
   const filteredBookings = (bookings ?? []).filter((booking) => {
@@ -134,7 +135,12 @@ export const BookingsScreen = () => {
     const targetNavigation = parentNavigation || navigation;
 
     if (booking.status === 'PENDING_PAYMENT') {
-      targetNavigation.navigate('BookingPayment', { bookingId: booking.id });
+      targetNavigation.navigate('BookingPayment', {
+        bookingId: booking.id,
+        booking,
+        showtime: booking.showtime,
+        selectedSeatLabels: booking.seatLabels,
+      });
       return;
     }
 
@@ -144,7 +150,7 @@ export const BookingsScreen = () => {
   const renderHeader = () => (
     <>
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.headerAction}
           activeOpacity={0.8}
           onPress={() => {
@@ -157,9 +163,9 @@ export const BookingsScreen = () => {
           }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Booking History</Text>
-        <View style={styles.headerSpacer} />
+        {/* <View style={styles.headerSpacer} /> */}
       </View>
 
       <View style={styles.tabContainer}>
@@ -305,7 +311,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 20,

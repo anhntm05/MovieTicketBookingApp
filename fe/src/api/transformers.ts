@@ -204,6 +204,15 @@ export const normalizeSeatAvailability = (raw: unknown): SeatAvailability => {
 export const normalizeBooking = (raw: unknown): Booking => {
   const booking = toRecord(raw);
   const showtime = booking.showtime && typeof booking.showtime === 'object' ? normalizeShowtime(booking.showtime) : undefined;
+  const seatLabels = ensureArray(booking.seats)
+    .map((seat) => {
+      const seatRecord = toRecord(seat);
+      const row = String(seatRecord.row || '');
+      const number = seatRecord.number != null ? String(seatRecord.number) : '';
+      const label = String(seatRecord.label || `${row}${number}`);
+      return label.trim();
+    })
+    .filter(Boolean);
 
   return {
     id: getId(booking),
@@ -220,6 +229,7 @@ export const normalizeBooking = (raw: unknown): Booking => {
         : '',
     holdExpiresAt: booking.holdExpiresAt ? new Date(booking.holdExpiresAt).toISOString() : '',
     seatIds: ensureArray(booking.seats).map(getId).filter(Boolean),
+    seatLabels,
     showtime,
   };
 };

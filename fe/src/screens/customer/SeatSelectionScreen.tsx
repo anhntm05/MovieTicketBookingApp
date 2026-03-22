@@ -16,8 +16,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomerStackParamList } from '../../types/navigation';
 import apiClient from '../../api/client';
-import { normalizeSeatAvailability, normalizeShowtime, unwrapApiData } from '../../api/transformers';
-import { SeatAvailability, Showtime } from '../../types/models';
+import { normalizeBooking, normalizeSeatAvailability, normalizeShowtime, unwrapApiData } from '../../api/transformers';
+import { Booking, SeatAvailability, Showtime } from '../../types/models';
 import { Button } from '../../components/Button';
 import { useAuthStore } from '../../store/authStore';
 
@@ -35,7 +35,7 @@ export const SeatSelectionScreen: React.FC<Props> = ({ route, navigation }) => {
   const { showtimeId } = route.params;
   const { isAuthenticated } = useAuthStore();
   const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
-  const [isHolding, setIsHolding] = useState(false);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
 
   const { data: showtime, isLoading: isLoadingShowtime } = useQuery<Showtime>({
     queryKey: ['showtime', showtimeId],
@@ -79,15 +79,31 @@ export const SeatSelectionScreen: React.FC<Props> = ({ route, navigation }) => {
     if (selectedSeatIds.length === 0) return;
 
     try {
-      setIsHolding(true);
-      await apiClient.post('/bookings/hold', {
-        showtime: showtimeId,
-        seats: selectedSeatIds,
-      });
+      setIsCreatingBooking(true);
+      const booking = normalizeBooking(
+        unwrapApiData(
+          await apiClient.post('/bookings', {
+            showtime: showtimeId,
+            seats: selectedSeatIds,
+          })
+        )
+      );
+      const selectedSeatLabelsForPayment =
+        seats
+          ?.filter((seat) => selectedSeatIds.includes(seat.id))
+          .sort((a, b) => {
+            if (a.row === b.row) return a.number - b.number;
+            return a.row.localeCompare(b.row);
+          })
+          .map((seat) => `${seat.row}${seat.number}`) || [];
 
       navigation.navigate('BookingPayment', {
+        bookingId: booking.id,
+        booking,
         showtimeId,
+        showtime,
         selectedSeatIds,
+        selectedSeatLabels: selectedSeatLabelsForPayment,
       });
     } catch (error: any) {
       Alert.alert(
@@ -105,7 +121,7 @@ export const SeatSelectionScreen: React.FC<Props> = ({ route, navigation }) => {
       refetchSeats();
       setSelectedSeatIds([]);
     } finally {
-      setIsHolding(false);
+      setIsCreatingBooking(false);
     }
   };
 
@@ -273,7 +289,7 @@ export const SeatSelectionScreen: React.FC<Props> = ({ route, navigation }) => {
             title="Confirm Booking"
             onPress={handleHoldSeats}
             disabled={selectedSeatIds.length === 0}
-            isLoading={isHolding}
+            isLoading={isCreatingBooking}
             style={styles.confirmButton}
           />
         </View>

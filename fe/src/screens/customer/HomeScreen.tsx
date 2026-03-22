@@ -291,7 +291,7 @@ export const HomeScreen = () => {
         <View style={styles.movieSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured Movies</Text>
-            <TouchableOpacity onPress={() => setActiveCategory('Now Playing')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Movies')}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -635,3 +635,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+

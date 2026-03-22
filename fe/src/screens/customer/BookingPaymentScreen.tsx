@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,11 +18,10 @@ import { CustomerStackParamList } from '../../types/navigation';
 import apiClient from '../../api/client';
 import {
   normalizeBooking,
-  normalizeSeatAvailability,
   normalizeShowtime,
   unwrapApiData,
 } from '../../api/transformers';
-import { Booking, SeatAvailability, Showtime } from '../../types/models';
+import { Booking, Showtime } from '../../types/models';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'BookingPayment'>;
 
@@ -35,12 +34,17 @@ const MUTED = '#666';
 const MUTED_LIGHT = '#aaa';
 
 export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { bookingId: initialBookingId, showtimeId: routeShowtimeId, selectedSeatIds: routeSeatIds } = route.params;
-  const [bookingId, setBookingId] = useState<string | null>(initialBookingId || null);
-  const [isCreating, setIsCreating] = useState(!initialBookingId);
+  const {
+    bookingId: routeBookingId,
+    booking: routeBooking,
+    showtimeId: routeShowtimeId,
+    showtime: routeShowtime,
+    selectedSeatIds: routeSeatIds,
+    selectedSeatLabels: routeSeatLabels,
+  } = route.params;
+  const bookingId = routeBookingId || routeBooking?.id || null;
   const [now, setNow] = useState(Date.now());
   const expiryHandledRef = useRef(false);
-  const createStartedRef = useRef(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -51,88 +55,32 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
     return () => clearInterval(timer);
   }, []);
 
-  const createBookingMutation = useMutation({
-    mutationFn: async () =>
-      normalizeBooking(
-        unwrapApiData(
-          await apiClient.post('/bookings', {
-            showtime: routeShowtimeId,
-            seats: routeSeatIds,
-          })
-        )
-      ),
-    onSuccess: (booking) => {
-      setBookingId(booking.id);
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    },
-    onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to create booking', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
-    },
-    onSettled: () => {
-      setIsCreating(false);
-    },
-  });
-
   useEffect(() => {
-    if (initialBookingId) {
-      return;
-    }
-
-    if (!routeShowtimeId || !routeSeatIds || routeSeatIds.length === 0) {
-      setIsCreating(false);
-      Alert.alert('Booking unavailable', 'Missing seat selection for this payment session.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
+    if (!bookingId) {
+      Alert.alert('Booking unavailable', 'The payment session could not be restored.', [
+        { text: 'OK', onPress: () => navigation.navigate('Tabs', { screen: 'Bookings' }) },
       ]);
-      return;
     }
-
-    if (createStartedRef.current) {
-      return;
-    }
-
-    createStartedRef.current = true;
-    createBookingMutation.mutate();
-  }, [createBookingMutation, initialBookingId, navigation, routeSeatIds, routeShowtimeId]);
+  }, [bookingId, navigation]);
 
   const { data: booking, isLoading: isLoadingBooking, refetch: refetchBooking } = useQuery<Booking>({
     queryKey: ['booking', bookingId],
     enabled: Boolean(bookingId),
     queryFn: async () => normalizeBooking(unwrapApiData(await apiClient.get(`/bookings/${bookingId}`))),
+    initialData: routeBooking,
     refetchInterval: (query) => (query.state.data?.status === 'PENDING_PAYMENT' ? 5000 : false),
   });
 
-  const effectiveShowtimeId = booking?.showtimeId || routeShowtimeId;
-  const selectedSeatIds = booking?.seatIds?.length ? booking.seatIds : routeSeatIds || [];
+  const effectiveShowtimeId = routeShowtime?.id || booking?.showtime?.id || booking?.showtimeId || routeShowtimeId;
+  const selectedSeatIds = routeSeatIds || booking?.seatIds || [];
+  const selectedSeatLabels = routeSeatLabels || booking?.seatLabels || [];
 
   const { data: showtime } = useQuery<Showtime>({
     queryKey: ['showtime', effectiveShowtimeId],
     enabled: Boolean(effectiveShowtimeId),
+    initialData: routeShowtime || booking?.showtime,
     queryFn: async () => normalizeShowtime(unwrapApiData(await apiClient.get(`/showtimes/${effectiveShowtimeId}`))),
   });
-
-  const { data: seats = [] } = useQuery<SeatAvailability[]>({
-    queryKey: ['seats', effectiveShowtimeId],
-    enabled: Boolean(effectiveShowtimeId),
-    queryFn: async () => {
-      const data = unwrapApiData<unknown[]>(await apiClient.get(`/showtimes/${effectiveShowtimeId}/seats`));
-      return data.map(normalizeSeatAvailability);
-    },
-  });
-
-  const selectedSeatLabels = useMemo(() => {
-    return seats
-      .filter((seat) => selectedSeatIds.includes(seat.id))
-      .sort((a, b) => {
-        if (a.row === b.row) {
-          return a.number - b.number;
-        }
-
-        return a.row.localeCompare(b.row);
-      })
-      .map((seat) => `${seat.row}${seat.number}`);
-  }, [seats, selectedSeatIds]);
 
   const bookingCode = booking?.bookingCode || (bookingId ? bookingId.slice(0, 8).toUpperCase() : 'PENDING');
   const totalAmount = booking?.totalAmount || 0;
@@ -210,14 +158,14 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
 
   const cancelMutation = useMutation({
     mutationFn: async () => apiClient.put(`/bookings/${bookingId}/cancel`),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['bookings'] }),
-        bookingId ? queryClient.invalidateQueries({ queryKey: ['booking', bookingId] }) : Promise.resolve(),
-        effectiveShowtimeId
-          ? queryClient.invalidateQueries({ queryKey: ['seats', effectiveShowtimeId] })
-          : Promise.resolve(),
-      ]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      if (bookingId) {
+        queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
+      }
+      if (effectiveShowtimeId) {
+        queryClient.invalidateQueries({ queryKey: ['seats', effectiveShowtimeId] });
+      }
       Alert.alert('Booking cancelled', 'Your pending booking was cancelled and the seats were released.', [
         {
           text: 'Back to Bookings',
@@ -271,12 +219,12 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
     ]);
   };
 
-  if (isCreating || (bookingId && isLoadingBooking)) {
+  if (bookingId && isLoadingBooking && !booking) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={ACCENT} />
-          <Text style={styles.loadingText}>{isCreating ? 'Securing your seats...' : 'Loading payment session...'}</Text>
+          <Text style={styles.loadingText}>Loading payment session...</Text>
         </View>
       </SafeAreaView>
     );
@@ -469,6 +417,7 @@ export const BookingPaymentScreen: React.FC<Props> = ({ route, navigation }) => 
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 20,
     flex: 1,
     backgroundColor: BACKGROUND,
   },

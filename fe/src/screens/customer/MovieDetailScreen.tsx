@@ -217,9 +217,9 @@ export const MovieDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 <TouchableOpacity style={styles.iconCircle} onPress={() => navigation.goBack()}>
                   <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconCircle}>
+                {/* <TouchableOpacity style={styles.iconCircle}>
                   <MaterialCommunityIcons name="heart-outline" size={24} color="#fff" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
 
               <View style={styles.movieTitleContainer}>

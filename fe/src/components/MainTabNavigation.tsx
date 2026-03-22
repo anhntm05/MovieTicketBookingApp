@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 
-export type MainTabName = 'Home' | 'Cinemas' | 'Bookings' | 'Profile';
+export type MainTabName = 'Home' | 'Movies' | 'Cinemas' | 'Bookings' | 'Profile';
 
 interface MainTabNavigationProps {
   activeTab?: MainTabName;
@@ -12,6 +12,7 @@ interface MainTabNavigationProps {
 
 const tabs: Array<{ name: MainTabName; label: string; icon: string }> = [
   { name: 'Home', label: 'Home', icon: 'home-variant-outline' },
+  { name: 'Movies', label: 'Movies', icon: 'movie-filter-outline' },
   { name: 'Cinemas', label: 'Cinemas', icon: 'movie-open-outline' },
   { name: 'Bookings', label: 'Bookings', icon: 'ticket-confirmation-outline' },
   { name: 'Profile', label: 'Profile', icon: 'account-circle-outline' },

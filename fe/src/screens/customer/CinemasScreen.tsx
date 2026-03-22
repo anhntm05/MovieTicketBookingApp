@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../api/client';
@@ -30,6 +31,7 @@ const mapPreviewImage =
 const getCinemaImage = (index: number) => cinemaImages[index % cinemaImages.length];
 
 export const CinemasScreen = () => {
+  const navigation = useNavigation<any>();
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -119,7 +121,11 @@ export const CinemasScreen = () => {
     const locationText = [item.location, item.address].filter(Boolean).join(' � ') || 'Location unavailable';
 
     return (
-      <TouchableOpacity style={styles.card} activeOpacity={0.9}>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('CinemaDetail', { cinemaId: item.id })}
+      >
         <Image source={{ uri: getCinemaImage(index) }} style={styles.cinemaImage} />
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
@@ -219,6 +225,7 @@ export const CinemasScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 20,
     flex: 1,
     backgroundColor: theme.colors.background,
   },
@@ -233,12 +240,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
   headerTitle: {
     color: theme.colors.text,
     fontSize: 24,
+    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
   },
   headerSubtitle: {
