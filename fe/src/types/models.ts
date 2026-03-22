@@ -64,8 +64,11 @@ export interface Booking {
   userId: string;
   showtimeId: string;
   status: 'PENDING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+  paymentStatus?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
   totalAmount: number;
   createdAt: string;
+  holdExpiresAt?: string;
+  seatIds?: string[];
   showtime?: Showtime;
 }
 
@@ -90,6 +93,7 @@ export interface TicketDetail {
   bookingCode: string;
   status: Booking['status'];
   paymentStatus: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+  holdExpiresAt?: string;
   paymentMethod?: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PAYPAL' | 'BANK_TRANSFER';
   transactionId?: string;
   qrCodeValue: string;

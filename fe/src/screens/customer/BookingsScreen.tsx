@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   RefreshControl,
@@ -12,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiClient from '../../api/client';
 import { normalizeBooking, unwrapApiData } from '../../api/transformers';
@@ -21,9 +20,6 @@ import { Booking } from '../../types/models';
 
 const categories = ['All', 'Upcoming', 'Past'] as const;
 type BookingCategory = (typeof categories)[number];
-
-const isCancellable = (status: Booking['status']) =>
-  status === 'CONFIRMED' || status === 'PENDING_PAYMENT';
 
 const isUpcomingBooking = (booking: Booking) => {
   if (!booking.showtime?.startTime) {
@@ -59,6 +55,14 @@ const formatBookingTime = (dateStr?: string) => {
 
 const formatStatusLabel = (status: Booking['status']) => status.replace(/_/g, ' ');
 
+const formatRemaining = (remainingMs: number) => {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
 const getStatusColor = (status: Booking['status']) => {
   switch (status) {
     case 'CONFIRMED':
@@ -73,8 +77,15 @@ const getStatusColor = (status: Booking['status']) => {
   }
 };
 
-const getBookingNote = (status: Booking['status']) => {
-  switch (status) {
+const getBookingNote = (booking: Booking, now: number) => {
+  if (booking.status === 'PENDING_PAYMENT') {
+    const expiresAtMs = booking.holdExpiresAt ? new Date(booking.holdExpiresAt).getTime() : 0;
+    const remainingMs = Math.max(0, expiresAtMs - now);
+
+    return remainingMs > 0 ? `Time left to pay: ${formatRemaining(remainingMs)}` : 'Payment expired';
+  }
+
+  switch (booking.status) {
     case 'CANCELLED':
       return 'Booking cancelled';
     case 'EXPIRED':
@@ -86,8 +97,16 @@ const getBookingNote = (status: Booking['status']) => {
 
 export const BookingsScreen = () => {
   const navigation = useNavigation<any>();
-  const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = React.useState<BookingCategory>('All');
+  const [now, setNow] = React.useState(Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: bookings, isLoading, refetch, isRefetching } = useQuery<Booking[]>({
     queryKey: ['bookings'],
@@ -95,25 +114,8 @@ export const BookingsScreen = () => {
       const data = unwrapApiData<unknown[]>(await apiClient.get('/bookings/me'));
       return data.map(normalizeBooking);
     },
+    refetchInterval: 5000,
   });
-
-  const cancelMutation = useMutation({
-    mutationFn: async (bookingId: string) => apiClient.put(`/bookings/${bookingId}/cancel`),
-    onSuccess: () => {
-      Alert.alert('Success', 'Booking cancelled successfully');
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    },
-    onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'Could not cancel booking');
-    },
-  });
-
-  const handleCancelClick = (bookingId: string) => {
-    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
-      { text: 'No', style: 'cancel' },
-      { text: 'Yes, cancel it', style: 'destructive', onPress: () => cancelMutation.mutate(bookingId) },
-    ]);
-  };
 
   const filteredBookings = (bookings ?? []).filter((booking) => {
     if (activeCategory === 'All') {
@@ -127,15 +129,16 @@ export const BookingsScreen = () => {
     return !isUpcomingBooking(booking);
   });
 
-  const openTicketDetail = (bookingId: string) => {
+  const openBooking = (booking: Booking) => {
     const parentNavigation = navigation.getParent();
+    const targetNavigation = parentNavigation || navigation;
 
-    if (parentNavigation) {
-      parentNavigation.navigate('TicketDetail', { bookingId });
+    if (booking.status === 'PENDING_PAYMENT') {
+      targetNavigation.navigate('BookingPayment', { bookingId: booking.id });
       return;
     }
 
-    navigation.navigate('TicketDetail', { bookingId });
+    targetNavigation.navigate('TicketDetail', { bookingId: booking.id });
   };
 
   const renderHeader = () => (
@@ -167,12 +170,7 @@ export const BookingsScreen = () => {
             style={styles.tab}
             activeOpacity={0.85}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeCategory === category && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeCategory === category && styles.activeTabText]}>
               {category}
             </Text>
             {activeCategory === category ? <View style={styles.activeIndicator} /> : null}
@@ -191,15 +189,10 @@ export const BookingsScreen = () => {
       item.showtime?.screen?.cinema?.address ||
       item.showtime?.screen?.cinema?.location ||
       'Destination unavailable';
-    const note = getBookingNote(item.status);
-    const isCancelling = cancelMutation.isPending && cancelMutation.variables === item.id;
+    const note = getBookingNote(item, now);
 
     return (
-      <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.9}
-        onPress={() => openTicketDetail(item.id)}
-      >
+      <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={() => openBooking(item)}>
         {movie?.posterUrl ? (
           <Image source={{ uri: movie.posterUrl }} style={styles.poster} />
         ) : (
@@ -219,24 +212,8 @@ export const BookingsScreen = () => {
                   {formatStatusLabel(item.status)}
                 </Text>
               </View>
+              {note ? <Text style={styles.noteText}>{note}</Text> : null}
             </View>
-
-            {isCancellable(item.status) ? (
-              <TouchableOpacity
-                style={[styles.cancelButton, isCancelling && styles.cancelButtonDisabled]}
-                onPress={() => handleCancelClick(item.id)}
-                activeOpacity={0.85}
-                disabled={isCancelling}
-              >
-                {isCancelling ? (
-                  <ActivityIndicator size="small" color="#f90680" />
-                ) : (
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                )}
-              </TouchableOpacity>
-            ) : note ? (
-              <Text style={styles.noteText}>{note}</Text>
-            ) : null}
           </View>
 
           <View style={styles.infoRow}>
@@ -292,19 +269,11 @@ export const BookingsScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={theme.colors.primary}
-          />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.colors.primary} />
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons
-              name="ticket-confirmation-outline"
-              size={42}
-              color="#f90680"
-            />
+            <MaterialCommunityIcons name="ticket-confirmation-outline" size={42} color="#f90680" />
             <Text style={styles.emptyTitle}>No bookings found</Text>
             <Text style={styles.emptyText}>
               There are no bookings in the {activeCategory.toLowerCase()} category yet.
@@ -411,10 +380,8 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
-    gap: 12,
   },
   cardHeading: {
     flex: 1,
@@ -436,31 +403,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
-  cancelButton: {
-    minWidth: 74,
-    backgroundColor: '#f9068015',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f9068040',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButtonDisabled: {
-    opacity: 0.7,
-  },
-  cancelButtonText: {
-    color: '#f90680',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   noteText: {
-    color: '#666',
+    color: '#8c8192',
     fontSize: 12,
-    fontStyle: 'italic',
-    maxWidth: 90,
-    textAlign: 'right',
+    marginTop: 8,
   },
   infoRow: {
     flexDirection: 'row',

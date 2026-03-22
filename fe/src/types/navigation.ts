@@ -12,7 +12,7 @@ export type CustomerStackParamList = {
   Tabs: NavigatorScreenParams<CustomerTabParamList> | undefined;
   MovieDetail: { movieId: string };
   SeatSelection: { showtimeId: string };
-  BookingPayment: { showtimeId: string; selectedSeatIds: string[] };
+  BookingPayment: { bookingId?: string; showtimeId?: string; selectedSeatIds?: string[] };
   TicketDetail: { bookingId: string };
   Notifications: undefined;
 };

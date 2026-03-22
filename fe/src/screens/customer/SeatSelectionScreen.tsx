@@ -26,7 +26,7 @@ const { width } = Dimensions.get('window');
 const ACCENT = '#f90680';
 const BACKGROUND = '#0f0a12';
 const TEXT_MUTED = '#999';
-const SEAT_AVAILABLE = '#666';
+const SEAT_AVAILABLE = '#8e8e8e';
 const SEAT_UNAVAILABLE = '#333';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'SeatSelection'>;
@@ -91,8 +91,16 @@ export const SeatSelectionScreen: React.FC<Props> = ({ route, navigation }) => {
       });
     } catch (error: any) {
       Alert.alert(
-        'Hold Failed',
-        error.response?.data?.message || 'The seats may have been taken by someone else.'
+        'Error',
+        error.response?.data?.message || 'The seats may have been taken by someone else.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.navigate('Tabs', { screen: 'Home' });
+            },
+          },
+        ]
       );
       refetchSeats();
       setSelectedSeatIds([]);
