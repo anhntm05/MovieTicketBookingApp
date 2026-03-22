@@ -20,6 +20,7 @@ router.get('/dashboard', AdminController.getDashboard);
 router.get('/finance', AdminController.getFinance);
 router.get('/revenue-stream', AdminController.getRevenueStream);
 router.get('/cinemas/:cinemaId/detail', AdminController.getCinemaOpsDetail);
+router.get('/users/analytics', AdminController.getUserAnalytics);
 router.get('/users', AdminController.listUsers);
 router.post('/staff', validateCreateStaff, validationHandler, AdminController.createStaff);
 router.patch('/users/:id/role', validateUserRoleUpdate, validationHandler, AdminController.updateUserRole);

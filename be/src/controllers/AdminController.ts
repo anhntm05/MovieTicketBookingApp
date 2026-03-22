@@ -140,6 +140,31 @@ export class AdminController {
     }
   }
 
+  static async getUserAnalytics(req: Request, res: Response) {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const analytics = await UserService.getUserAnalytics(page, limit, {
+        role: req.query.role as any,
+        status: req.query.status as any,
+        search: req.query.search as string | undefined,
+        userId: req.query.userId as string | undefined,
+      });
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: 'User analytics retrieved successfully',
+        data: analytics,
+      });
+    } catch (error: any) {
+      logger.error('Get user analytics error:', error);
+      res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   static async createStaff(req: Request, res: Response) {
     try {
       const user = await UserService.createStaff(req.body);

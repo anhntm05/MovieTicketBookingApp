@@ -488,6 +488,55 @@ export interface IFinanceBreakdownItem {
   transactions: number;
 }
 
+export interface IUserAnalyticsSummary {
+  totalUsers: number;
+  totalUsersChange: number;
+  activeUsers: number;
+  activeUserRate: number;
+  totalPurchasers: number;
+  purchaserRate: number;
+  userGrowthRate: number;
+}
+
+export interface IUserAnalyticsDirectoryItem {
+  id: string;
+  fullName: string;
+  email: string;
+  role: Uppercase<UserRole>;
+  status: Uppercase<UserStatus>;
+}
+
+export interface IUserAnalyticsPurchaseItem {
+  id: string;
+  title: string;
+  date: Date;
+  price: number;
+}
+
+export interface IUserAnalyticsSelectedUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: Uppercase<UserRole>;
+  status: Uppercase<UserStatus>;
+  totalSpent: number;
+  tickets: number;
+  favoriteCinema: string;
+  recentPurchases: IUserAnalyticsPurchaseItem[];
+}
+
+export interface IUserAnalyticsPayload {
+  summary: IUserAnalyticsSummary;
+  directory: IUserAnalyticsDirectoryItem[];
+  selectedUser?: IUserAnalyticsSelectedUser;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 export interface IJWTPayload {
   userId: string;
   email: string;
