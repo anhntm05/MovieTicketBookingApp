@@ -229,6 +229,15 @@ export class BookingService {
     const totalAmount = Number(booking.totalPrice || 0);
     const serviceFee = Math.max(totalAmount - ticketSubtotal - concessionsSubtotal, 0);
 
+    const qrCodeValue =
+      booking.paymentStatus === PAYMENT_STATUS.COMPLETED
+        ? this.generateTicketQrValue(
+            booking._id!.toString(),
+            String(booking.bookingCode || ''),
+            String(payment?.transactionId || '')
+          )
+        : '';
+
     return {
       bookingId: booking._id!.toString(),
       bookingCode: String(booking.bookingCode || ''),
@@ -236,7 +245,7 @@ export class BookingService {
       paymentStatus: booking.paymentStatus,
       paymentMethod: payment?.method,
       transactionId: payment?.transactionId,
-      qrCodeValue: payment?.transactionId || booking.bookingCode,
+      qrCodeValue,
       bookingDate: booking.bookingDate,
       movie: {
         id: movie?._id?.toString?.() || '',
@@ -349,6 +358,17 @@ export class BookingService {
 
   private static generateBookingCode(): string {
     return `BK${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  }
+
+  private static generateTicketQrValue(bookingId: string, bookingCode: string, transactionId: string): string {
+    const payload = JSON.stringify({
+      type: 'movie_ticket',
+      ticketId: bookingId,
+      bookingCode,
+      transactionId,
+    });
+
+    return Buffer.from(payload).toString('base64');
   }
 }
 

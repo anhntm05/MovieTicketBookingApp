@@ -210,10 +210,7 @@ export const AdminCustomerDetailScreen = () => {
           <Text style={styles.joinDate}>MEMBER SINCE {formatJoined(data.user.memberSince)}</Text>
 
           <View style={styles.heroActions}>
-            <TouchableOpacity style={styles.msgBtn} onPress={() => Alert.alert('Messaging unavailable', 'Customer messaging is not implemented.')}>
-              <Text style={styles.msgBtnText}>Message</Text>
-            </TouchableOpacity>
-            <View style={[styles.editBtn, { borderColor: `${statusColor}55` }]}>
+            <View style={[styles.editBtn, styles.statusHeroBtn, { borderColor: `${statusColor}55` }]}>
               <Text style={[styles.editBtnText, { color: statusColor }]}>{data.user.status}</Text>
             </View>
           </View>
@@ -307,10 +304,6 @@ export const AdminCustomerDetailScreen = () => {
         </View>
 
         <View style={styles.actionsSection}>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Messaging unavailable', 'Customer messaging is not implemented.')}>
-            <MaterialCommunityIcons name="email-outline" size={20} color="#fff" />
-            <Text style={styles.actionBtnText}>Message Customer</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} disabled={statusMutation.isPending} onPress={() => statusMutation.mutate(data.user.status === 'INACTIVE' ? 'active' : 'inactive')}>
             <MaterialCommunityIcons name="account-cancel-outline" size={20} color="#fff" />
             <Text style={styles.actionBtnText}>{deactivateLabel}</Text>
@@ -346,10 +339,9 @@ const styles = StyleSheet.create({
   tierText: { color: '#f90680', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
   userEmail: { color: '#666', fontSize: 14, marginBottom: 5 },
   joinDate: { color: '#666', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
-  heroActions: { flexDirection: 'row', gap: 15, marginTop: 25 },
-  msgBtn: { width: (width - 60) / 2, height: 50, backgroundColor: '#f90680', borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
-  msgBtnText: { color: '#fff', fontWeight: 'bold' },
+  heroActions: { flexDirection: 'row', marginTop: 25 },
   editBtn: { width: (width - 60) / 2, height: 50, backgroundColor: '#1a141e', borderRadius: 15, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  statusHeroBtn: { width: width - 40 },
   editBtnText: { fontWeight: 'bold' },
   gridRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
   statCard: { width: (width - 55) / 2, backgroundColor: '#1a141e', borderRadius: 20, padding: 18, position: 'relative', overflow: 'hidden' },

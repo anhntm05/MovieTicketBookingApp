@@ -32,6 +32,11 @@ const userSchema = new Schema<any, UserModel, IUserMethods>(
       type: String,
       required: [true, 'Please provide a phone number'],
     },
+    avatarUrl: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     role: {
       type: String,
       enum: [USER_ROLES.CUSTOMER, USER_ROLES.STAFF, USER_ROLES.ADMIN],
