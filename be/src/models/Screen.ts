@@ -23,6 +23,16 @@ const screenSchema = new Schema<any>(
       type: Schema.Types.Mixed,
       default: {},
     },
+    projectionType: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    audioSystem: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     status: {
       type: String,
       enum: [SCREEN_STATUS.ACTIVE, SCREEN_STATUS.MAINTENANCE],

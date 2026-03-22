@@ -103,6 +103,8 @@ export interface IScreen {
   name: string;
   totalSeats: number;
   seatLayout: Record<string, number>;
+  projectionType?: string;
+  audioSystem?: string;
   status: ScreenStatus;
   createdAt?: Date;
   updatedAt?: Date;
@@ -113,6 +115,8 @@ export interface IScreenRequest {
   name: string;
   totalSeats: number;
   seatLayout: Record<string, number>;
+  projectionType?: string;
+  audioSystem?: string;
   status?: ScreenStatus;
 }
 
@@ -459,6 +463,15 @@ export interface ICinemaOpsDetail {
     screenCount: number;
     totalSeats: number;
     screenNames: string[];
+    screens: Array<{
+      id: string;
+      name: string;
+      totalSeats: number;
+      hallType: string;
+      projectionType?: string;
+      audioSystem?: string;
+      status: ScreenStatus;
+    }>;
   };
   summary: ICinemaOpsSummary;
   trends: {

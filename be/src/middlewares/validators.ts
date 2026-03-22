@@ -171,6 +171,16 @@ export const validateScreenCreate = [
   body('seatLayout')
     .isObject()
     .withMessage('Seat layout must be an object'),
+  body('projectionType')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Projection technology must not be empty'),
+  body('audioSystem')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Audio system must not be empty'),
   body('status')
     .optional()
     .isIn(['active', 'maintenance'])

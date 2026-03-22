@@ -29,6 +29,8 @@ export interface Screen {
   name: string;
   status?: 'ACTIVE' | 'MAINTENANCE';
   totalSeats?: number;
+  projectionType?: string;
+  audioSystem?: string;
   cinema?: Cinema;
 }
 

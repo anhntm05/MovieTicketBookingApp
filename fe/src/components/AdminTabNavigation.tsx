@@ -14,13 +14,13 @@ const tabs: Array<{
   label: string;
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 }> = [
-  { name: 'Dashboard', label: 'Overview', icon: 'view-dashboard-outline' },
-  { name: 'Revenue', label: 'Revenue', icon: 'finance' },
-  { name: 'Movies', label: 'Movies', icon: 'movie-open-outline' },
-  { name: 'Users', label: 'Users', icon: 'account-group-outline' },
-  { name: 'Cinemas', label: 'Cinemas', icon: 'movie-open-settings-outline' },
-  { name: 'Profile', label: 'Profile', icon: 'account-circle-outline' },
-];
+    { name: 'Dashboard', label: 'Overview', icon: 'view-dashboard-outline' },
+    { name: 'Revenue', label: 'Revenue', icon: 'finance' },
+    { name: 'Movies', label: 'Movies', icon: 'movie-open-outline' },
+    { name: 'Cinemas', label: 'Cinemas', icon: 'movie-open-settings-outline' },
+    { name: 'Users', label: 'Users', icon: 'account-group-outline' },
+    { name: 'Profile', label: 'Profile', icon: 'account-circle-outline' },
+  ];
 
 export const AdminTabNavigation: React.FC<AdminTabNavigationProps> = ({
   activeTab,
