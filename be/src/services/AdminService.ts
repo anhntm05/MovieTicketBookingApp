@@ -3,8 +3,14 @@ import { Cinema } from '../models/Cinema';
 import { Comment } from '../models/Comment';
 import { Movie } from '../models/Movie';
 import { Payment } from '../models/Payment';
+import { Screen } from '../models/Screen';
 import { Showtime } from '../models/Showtime';
-import { IAdminMovieCatalogItem, IRevenueStreamData, IRevenueTrendPoint } from '../types';
+import {
+  IAdminMovieCatalogItem,
+  ICinemaOpsDetail,
+  IRevenueStreamData,
+  IRevenueTrendPoint,
+} from '../types';
 import { User } from '../models/User';
 import { BOOKING_STATUS, PAYMENT_STATUS, USER_ROLES } from '../utils/constants';
 
@@ -610,6 +616,246 @@ export class AdminService {
     };
   }
 
+  static async getCinemaOpsDetail(cinemaId: string): Promise<ICinemaOpsDetail> {
+    const now = new Date();
+    const todayStart = this.startOfDay(now);
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+    const currentPeriodStart = new Date(todayStart);
+    currentPeriodStart.setDate(currentPeriodStart.getDate() - 29);
+    const previousPeriodStart = new Date(currentPeriodStart);
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - 30);
+    const previousPeriodEnd = new Date(currentPeriodStart);
+    previousPeriodEnd.setMilliseconds(previousPeriodEnd.getMilliseconds() - 1);
+
+    const [cinema, screens] = await Promise.all([
+      Cinema.findById(cinemaId).lean(),
+      Screen.find({ cinema: cinemaId }).sort({ name: 1 }).lean(),
+    ]);
+
+    if (!cinema) {
+      const error: any = new Error('Cinema not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const screenIds = screens.map((screen: any) => screen._id);
+    const totalSeats = screens.reduce((sum: number, screen: any) => sum + Number(screen.totalSeats || 0), 0);
+
+    if (!screenIds.length) {
+      return {
+        cinema: {
+          id: cinema._id.toString(),
+          name: cinema.name,
+          location: cinema.location,
+          address: cinema.address,
+          status: cinema.status,
+          facilities: Array.isArray(cinema.facilities) ? cinema.facilities.map(String) : [],
+          screenCount: 0,
+          totalSeats,
+          screenNames: [],
+        },
+        summary: {
+          totalRevenue: 0,
+          revenueChange: 0,
+          totalBookings: 0,
+          averageDailyBookings: 0,
+          occupancyRate: 0,
+        },
+        trends: {
+          weekly: this.buildRevenueTrend([], new Date(todayStart.getTime() - 6 * 86400000), now, '7d', 7),
+          monthly: this.buildRevenueTrend([], currentPeriodStart, now, '30d', 7),
+        },
+        showingMovies: [],
+        bookingDistribution: this.emptyBookingDistribution(),
+      };
+    }
+
+    const showtimes = await Showtime.find({ screen: { $in: screenIds } })
+      .populate('movie', 'title poster')
+      .lean();
+
+    const showtimeIds = showtimes.map((showtime: any) => showtime._id);
+    const screenSeatMap = new Map(screens.map((screen: any) => [screen._id.toString(), Number(screen.totalSeats || 0)]));
+    const showtimeMap = new Map(showtimes.map((showtime: any) => [showtime._id.toString(), showtime]));
+
+    if (!showtimeIds.length) {
+      return {
+        cinema: {
+          id: cinema._id.toString(),
+          name: cinema.name,
+          location: cinema.location,
+          address: cinema.address,
+          status: cinema.status,
+          facilities: Array.isArray(cinema.facilities) ? cinema.facilities.map(String) : [],
+          screenCount: screens.length,
+          totalSeats,
+          screenNames: screens.map((screen: any) => String(screen.name || '')).filter(Boolean),
+        },
+        summary: {
+          totalRevenue: 0,
+          revenueChange: 0,
+          totalBookings: 0,
+          averageDailyBookings: 0,
+          occupancyRate: 0,
+        },
+        trends: {
+          weekly: this.buildRevenueTrend([], new Date(todayStart.getTime() - 6 * 86400000), now, '7d', 7),
+          monthly: this.buildRevenueTrend([], currentPeriodStart, now, '30d', 7),
+        },
+        showingMovies: [],
+        bookingDistribution: this.emptyBookingDistribution(),
+      };
+    }
+
+    const bookings = await Booking.find({ showtime: { $in: showtimeIds } }).lean();
+    const bookingIds = bookings.map((booking: any) => booking._id);
+    const payments = bookingIds.length
+      ? await Payment.find({
+          booking: { $in: bookingIds },
+          status: PAYMENT_STATUS.COMPLETED,
+        }).lean()
+      : [];
+
+    const bookingById = new Map(bookings.map((booking: any) => [booking._id.toString(), booking]));
+    const paidBookingIds = new Set(payments.map((payment: any) => payment.booking.toString()));
+    const validBookings = bookings.filter(
+      (booking: any) =>
+        booking.status !== BOOKING_STATUS.CANCELLED &&
+        booking.status !== BOOKING_STATUS.EXPIRED &&
+        (booking.status === BOOKING_STATUS.CONFIRMED ||
+          booking.paymentStatus === PAYMENT_STATUS.COMPLETED ||
+          paidBookingIds.has(booking._id.toString()))
+    );
+
+    const totalRevenue = payments.reduce((sum: number, payment: any) => sum + Number(payment.amount || 0), 0);
+    const currentRevenue = payments
+      .filter((payment: any) => payment.paidAt && new Date(payment.paidAt) >= currentPeriodStart && new Date(payment.paidAt) <= now)
+      .reduce((sum: number, payment: any) => sum + Number(payment.amount || 0), 0);
+    const previousRevenue = payments
+      .filter(
+        (payment: any) =>
+          payment.paidAt &&
+          new Date(payment.paidAt) >= previousPeriodStart &&
+          new Date(payment.paidAt) <= previousPeriodEnd
+      )
+      .reduce((sum: number, payment: any) => sum + Number(payment.amount || 0), 0);
+
+    const currentPeriodBookings = validBookings.filter((booking: any) => {
+      const createdAt = booking.bookingDate || booking.createdAt;
+      return createdAt && new Date(createdAt) >= currentPeriodStart && new Date(createdAt) <= now;
+    });
+
+    const recentShowtimes = showtimes.filter((showtime: any) => {
+      const startTime = new Date(showtime.startTime);
+      return startTime >= currentPeriodStart && startTime <= now;
+    });
+    const recentShowtimeIds = new Set(recentShowtimes.map((showtime: any) => showtime._id.toString()));
+    const bookedSeats = validBookings
+      .filter((booking: any) => recentShowtimeIds.has(booking.showtime.toString()))
+      .reduce((sum: number, booking: any) => sum + (Array.isArray(booking.seats) ? booking.seats.length : 0), 0);
+    const seatCapacity = recentShowtimes.reduce(
+      (sum: number, showtime: any) => sum + (screenSeatMap.get(showtime.screen.toString()) || 0),
+      0
+    );
+
+    const weeklyPayments = payments
+      .filter((payment: any) => payment.paidAt && new Date(payment.paidAt) >= new Date(todayStart.getTime() - 6 * 86400000))
+      .map((payment: any) => ({
+        amount: Number(payment.amount || 0),
+        paidAt: new Date(payment.paidAt),
+      }));
+    const monthlyPayments = payments
+      .filter((payment: any) => payment.paidAt && new Date(payment.paidAt) >= currentPeriodStart)
+      .map((payment: any) => ({
+        amount: Number(payment.amount || 0),
+        paidAt: new Date(payment.paidAt),
+      }));
+
+    const todayMovieMap = new Map<
+      string,
+      { movieId: string; title: string; posterUrl?: string; slots: number; bookings: number }
+    >();
+    const bookingCountByShowtime = validBookings.reduce((map, booking: any) => {
+      const showtimeId = booking.showtime.toString();
+      map.set(showtimeId, (map.get(showtimeId) || 0) + 1);
+      return map;
+    }, new Map<string, number>());
+
+    for (const showtime of showtimes) {
+      const startTime = new Date((showtime as any).startTime);
+      if (startTime < todayStart || startTime >= tomorrowStart) {
+        continue;
+      }
+
+      const movieRecord: any = (showtime as any).movie || {};
+      const movieId = this.toEntityId(movieRecord._id || movieRecord);
+      const mapKey = movieId || `movie-${(showtime as any)._id.toString()}`;
+      const current = todayMovieMap.get(mapKey) || {
+        movieId,
+        title: String(movieRecord.title || 'Untitled movie'),
+        posterUrl: movieRecord.poster ? String(movieRecord.poster) : undefined,
+        slots: 0,
+        bookings: 0,
+      };
+
+      current.slots += 1;
+      current.bookings += bookingCountByShowtime.get((showtime as any)._id.toString()) || 0;
+      todayMovieMap.set(mapKey, current);
+    }
+
+    const showingMoviesBase = Array.from(todayMovieMap.values())
+      .sort((a, b) => {
+        if (b.bookings !== a.bookings) return b.bookings - a.bookings;
+        if (b.slots !== a.slots) return b.slots - a.slots;
+        return a.title.localeCompare(b.title);
+      })
+      .slice(0, 6);
+
+    const topMovieId = showingMoviesBase[0]?.movieId;
+
+    const bookingDistribution = this.buildBookingDistribution(validBookings, showtimeMap);
+
+    return {
+      cinema: {
+        id: cinema._id.toString(),
+        name: cinema.name,
+        location: cinema.location,
+        address: cinema.address,
+        status: cinema.status,
+        facilities: Array.isArray(cinema.facilities) ? cinema.facilities.map(String) : [],
+        screenCount: screens.length,
+        totalSeats,
+        screenNames: screens.map((screen: any) => String(screen.name || '')).filter(Boolean),
+      },
+      summary: {
+        totalRevenue,
+        revenueChange: this.calculateChange(currentRevenue, previousRevenue),
+        totalBookings: validBookings.length,
+        averageDailyBookings: Number((currentPeriodBookings.length / 30).toFixed(1)),
+        occupancyRate: seatCapacity ? Number(((bookedSeats / seatCapacity) * 100).toFixed(1)) : 0,
+      },
+      trends: {
+        weekly: this.buildRevenueTrend(
+          weeklyPayments,
+          new Date(todayStart.getTime() - 6 * 86400000),
+          now,
+          '7d',
+          7
+        ),
+        monthly: this.buildRevenueTrend(monthlyPayments, currentPeriodStart, now, '30d', 7),
+      },
+      showingMovies: showingMoviesBase.map((movie) => ({
+        movieId: movie.movieId,
+        title: movie.title,
+        slots: movie.slots,
+        posterUrl: movie.posterUrl,
+        isTrending: movie.movieId === topMovieId && showingMoviesBase.length > 1,
+      })),
+      bookingDistribution,
+    };
+  }
+
   private static buildDateQuery(startDate?: Date, endDate?: Date, field: string = 'createdAt') {
     const query: any = {};
     if (startDate || endDate) {
@@ -698,6 +944,58 @@ export class AdminService {
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
+  }
+
+  private static buildBookingDistribution(bookings: any[], showtimeMap: Map<string, any>) {
+    const categories = [
+      { label: 'Morning (09:00 - 12:00)', key: 'morning' },
+      { label: 'Afternoon (12:00 - 17:00)', key: 'afternoon' },
+      { label: 'Evening (17:00 - 21:00)', key: 'evening' },
+      { label: 'Night (21:00 - 01:00)', key: 'night' },
+    ] as const;
+
+    const counts = {
+      morning: 0,
+      afternoon: 0,
+      evening: 0,
+      night: 0,
+    };
+
+    for (const booking of bookings) {
+      const showtime = showtimeMap.get(booking.showtime.toString());
+      if (!showtime?.startTime) continue;
+      const hour = new Date(showtime.startTime).getHours();
+
+      if (hour < 12) counts.morning += 1;
+      else if (hour < 17) counts.afternoon += 1;
+      else if (hour < 21) counts.evening += 1;
+      else counts.night += 1;
+    }
+
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+    return categories.map((category) => ({
+      label: category.label,
+      count: counts[category.key],
+      percentage: total ? Number(((counts[category.key] / total) * 100).toFixed(0)) : 0,
+    }));
+  }
+
+  private static emptyBookingDistribution() {
+    return [
+      { label: 'Morning (09:00 - 12:00)', percentage: 0, count: 0 },
+      { label: 'Afternoon (12:00 - 17:00)', percentage: 0, count: 0 },
+      { label: 'Evening (17:00 - 21:00)', percentage: 0, count: 0 },
+      { label: 'Night (21:00 - 01:00)', percentage: 0, count: 0 },
+    ];
+  }
+
+  private static toEntityId(value: any) {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    if (value.toString) return value.toString();
+    return '';
   }
 }
 

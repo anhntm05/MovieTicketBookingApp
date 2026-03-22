@@ -42,6 +42,12 @@ type AdminMovieCatalogResult = {
   warning?: string;
 };
 
+type FinanceMoviePoint = {
+  label: string;
+  revenue: number;
+  transactions: number;
+};
+
 const toRecord = (value: unknown): Record<string, any> =>
   value && typeof value === 'object' ? (value as Record<string, any>) : {};
 
@@ -88,6 +94,16 @@ const normalizeFallbackMovie = (raw: unknown): AdminMovieCatalogItem => {
     posterUrl: movie.posterUrl,
     releaseDate: movie.releaseDate || undefined,
     createdAt: movie.releaseDate || undefined,
+  };
+};
+
+const normalizeFinanceMoviePoint = (raw: unknown): FinanceMoviePoint => {
+  const point = toRecord(raw);
+
+  return {
+    label: String(point.label || ''),
+    revenue: Number(point.revenue || 0),
+    transactions: Number(point.transactions || 0),
   };
 };
 
@@ -148,29 +164,91 @@ export const AdminMoviesScreen = () => {
   const { data, error, isLoading, isRefetching, refetch } = useQuery<AdminMovieCatalogResult>({
     queryKey: ['admin-movie-catalog', deferredSearchQuery, sortParam],
     queryFn: async () => {
-      const fallbackData = unwrapApiData<unknown[]>(
-        await apiClient.get('/movies', {
-          params: {
-            status: 'all',
-            title: deferredSearchQuery || undefined,
-            limit: 100,
-          },
-        })
-      );
+      try {
+        const adminData = unwrapApiData<unknown[]>(
+          await apiClient.get('/admin/movies', {
+            params: {
+              search: deferredSearchQuery || undefined,
+              sort: sortParam,
+              status: 'all',
+            },
+          })
+        );
 
-      const movies = fallbackData.map(normalizeFallbackMovie);
+        return {
+          movies: adminData.map(normalizeMovieCatalogItem),
+        };
+      } catch (adminError: any) {
+        const [fallbackMoviesResponse, financeResponse, showtimesResponse] = await Promise.all([
+          apiClient.get('/movies', {
+            params: {
+              status: 'all',
+              title: deferredSearchQuery || undefined,
+              limit: 100,
+            },
+          }),
+          apiClient.get('/admin/finance', {
+            params: {
+              groupBy: 'movie',
+            },
+          }),
+          apiClient.get('/showtimes', {
+            params: {
+              status: 'all',
+              limit: 500,
+            },
+          }),
+        ]);
 
-      if (sortParam === 'title') {
-        movies.sort((a, b) => a.title.localeCompare(b.title));
-      } else if (sortParam === 'recent') {
-        movies.sort((a, b) => {
-          const aDate = new Date(a.createdAt || a.releaseDate || 0).getTime();
-          const bDate = new Date(b.createdAt || b.releaseDate || 0).getTime();
-          return bDate - aDate;
+        const fallbackData = unwrapApiData<unknown[]>(fallbackMoviesResponse);
+        const financeByMovie = unwrapApiData<unknown[]>(financeResponse).map(normalizeFinanceMoviePoint);
+        const showtimes = unwrapApiData<any[]>(showtimesResponse);
+
+        const financeMap = new Map(
+          financeByMovie.map((item) => [item.label.trim().toLowerCase(), item])
+        );
+
+        const showtimeCountMap = showtimes.reduce((map, showtimeRaw) => {
+          const showtime = toRecord(showtimeRaw);
+          const movieRecord = toRecord(showtime.movie);
+          const movieId = getId(movieRecord || showtime.movie);
+          if (!movieId) return map;
+          map.set(movieId, (map.get(movieId) || 0) + 1);
+          return map;
+        }, new Map<string, number>());
+
+        const movies = fallbackData.map((rawMovie) => {
+          const movie = normalizeFallbackMovie(rawMovie);
+          const finance = financeMap.get(movie.title.trim().toLowerCase());
+
+          return {
+            ...movie,
+            revenue: finance?.revenue || 0,
+            bookings: finance?.transactions || 0,
+            showtimes: showtimeCountMap.get(movie.movieId) || 0,
+          };
         });
-      }
 
-      return { movies };
+        if (sortParam === 'title') {
+          movies.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortParam === 'revenue') {
+          movies.sort((a, b) => {
+            if (b.revenue !== a.revenue) return b.revenue - a.revenue;
+            return b.bookings - a.bookings;
+          });
+        } else if (sortParam === 'recent') {
+          movies.sort((a, b) => {
+            const aDate = new Date(a.createdAt || a.releaseDate || 0).getTime();
+            const bDate = new Date(b.createdAt || b.releaseDate || 0).getTime();
+            return bDate - aDate;
+          });
+        }
+
+        return {
+          movies,
+          warning: `Admin catalog unavailable. Showing movie metrics from legacy admin APIs instead. ${getErrorMessage(adminError)}`,
+        };
+      }
     },
   });
 

@@ -92,6 +92,24 @@ export class AdminController {
     }
   }
 
+  static async getCinemaOpsDetail(req: Request, res: Response) {
+    try {
+      const detail = await AdminService.getCinemaOpsDetail(req.params.cinemaId);
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: 'Cinema operations detail retrieved successfully',
+        data: detail,
+      });
+    } catch (error: any) {
+      logger.error('Get cinema ops detail error:', error);
+      res.status(error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   static async listUsers(req: Request, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;

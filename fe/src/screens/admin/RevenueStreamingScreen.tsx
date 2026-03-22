@@ -55,6 +55,31 @@ type RevenueStreamData = {
     name: string;
     revenue: number;
   }>;
+  meta?: {
+    isLegacyFallback: boolean;
+    notice?: string;
+  };
+};
+
+type DashboardSummary = {
+  payments: {
+    totalRevenue: number;
+    completed: number;
+    refunded: number;
+    failed: number;
+  };
+  topMovies: Array<{
+    movieId: string;
+    title: string;
+    bookings: number;
+    revenue: number;
+  }>;
+};
+
+type FinancePoint = {
+  label: string;
+  revenue: number;
+  transactions: number;
 };
 
 const DEFAULT_DATA: RevenueStreamData = {
@@ -77,6 +102,9 @@ const DEFAULT_DATA: RevenueStreamData = {
   },
   liveTransactions: [],
   topPerformers: [],
+  meta: {
+    isLegacyFallback: false,
+  },
 };
 
 const formatMoney = (value: number) => {
@@ -104,6 +132,109 @@ const getErrorMessage = (error: any) => {
   }
 
   return 'Unable to load revenue stream.';
+};
+
+const formatDateParam = (value: Date) => value.toISOString();
+
+const calculateChange = (current: number, previous: number) => {
+  if (previous <= 0) {
+    return current > 0 ? 100 : 0;
+  }
+
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+};
+
+const getRangeDates = (range: RevenueRange, now: Date) => {
+  const startDate = new Date(now);
+
+  if (range === 'today') {
+    startDate.setHours(0, 0, 0, 0);
+  } else if (range === '7d') {
+    startDate.setDate(now.getDate() - 6);
+    startDate.setHours(0, 0, 0, 0);
+  } else {
+    startDate.setDate(now.getDate() - 29);
+    startDate.setHours(0, 0, 0, 0);
+  }
+
+  const previousEnd = new Date(startDate);
+  previousEnd.setMilliseconds(previousEnd.getMilliseconds() - 1);
+
+  const previousStart = new Date(previousEnd);
+  previousStart.setMilliseconds(previousStart.getMilliseconds() - (now.getTime() - startDate.getTime()));
+
+  return {
+    startDate,
+    previousStart,
+    previousEnd,
+  };
+};
+
+const buildLegacyTrend = (points: FinancePoint[]) =>
+  points.map((item) => ({
+    label: item.label,
+    revenue: Number(item.revenue || 0),
+  }));
+
+const toRevenueStreamFallback = ({
+  totalDashboard,
+  todayDashboard,
+  yesterdayDashboard,
+  currentDashboard,
+  previousDashboard,
+  finance,
+}: {
+  totalDashboard: DashboardSummary;
+  todayDashboard: DashboardSummary;
+  yesterdayDashboard: DashboardSummary;
+  currentDashboard: DashboardSummary;
+  previousDashboard: DashboardSummary;
+  finance: FinancePoint[];
+}): RevenueStreamData => {
+  const completedPayments = currentDashboard.payments.completed || 0;
+  const refunded = currentDashboard.payments.refunded || 0;
+  const failed = currentDashboard.payments.failed || 0;
+  const transactionTotal = completedPayments + refunded + failed;
+  const refundRate = transactionTotal ? (refunded / transactionTotal) * 100 : 0;
+  const failureRate = transactionTotal ? (failed / transactionTotal) * 100 : 0;
+
+  return {
+    summary: {
+      totalRevenue: totalDashboard.payments.totalRevenue || 0,
+      todayRevenue: todayDashboard.payments.totalRevenue || 0,
+      averageOrderValue: completedPayments
+        ? (currentDashboard.payments.totalRevenue || 0) / completedPayments
+        : 0,
+      completedPayments,
+      revenueChange: calculateChange(
+        currentDashboard.payments.totalRevenue || 0,
+        previousDashboard.payments.totalRevenue || 0
+      ),
+      todayChange: calculateChange(
+        todayDashboard.payments.totalRevenue || 0,
+        yesterdayDashboard.payments.totalRevenue || 0
+      ),
+      completedChange: calculateChange(completedPayments, previousDashboard.payments.completed || 0),
+    },
+    trend: buildLegacyTrend(finance),
+    health: {
+      refundRate: Number(refundRate.toFixed(1)),
+      failureRate: Number(failureRate.toFixed(1)),
+      alertTitle: 'LEGACY DATA MODE',
+      alertMessage: 'Using dashboard and finance endpoints because the revenue stream endpoint is unavailable.',
+      alertSeverity: 'warning',
+    },
+    liveTransactions: [],
+    topPerformers: (currentDashboard.topMovies || []).map((movie) => ({
+      id: movie.movieId,
+      name: movie.title,
+      revenue: Number(movie.revenue || 0),
+    })),
+    meta: {
+      isLegacyFallback: true,
+      notice: 'Revenue stream endpoint unavailable. Showing revenue data from older admin APIs.',
+    },
+  };
 };
 
 const KPICard = ({
@@ -183,12 +314,79 @@ export const RevenueStreamingScreen = () => {
 
   const { data = DEFAULT_DATA, error, isLoading, refetch } = useQuery<RevenueStreamData>({
     queryKey: ['admin-revenue-stream', range],
-    queryFn: async () =>
-      unwrapApiData<RevenueStreamData>(
-        await apiClient.get('/admin/revenue-stream', {
-          params: { range },
-        })
-      ),
+    queryFn: async () => {
+      try {
+        return unwrapApiData<RevenueStreamData>(
+          await apiClient.get('/admin/revenue-stream', {
+            params: { range },
+          })
+        );
+      } catch (error: any) {
+        const message = String(error?.response?.data?.message || error?.message || '').toLowerCase();
+        const isMissingRoute = error?.response?.status === 404 || message.includes('not found');
+
+        if (!isMissingRoute) {
+          throw error;
+        }
+
+        const now = new Date();
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+        const yesterdayEnd = new Date(todayStart);
+        yesterdayEnd.setMilliseconds(yesterdayEnd.getMilliseconds() - 1);
+
+        const { startDate, previousStart, previousEnd } = getRangeDates(range, now);
+
+        const [totalDashboardResponse, todayDashboardResponse, yesterdayDashboardResponse, currentDashboardResponse, previousDashboardResponse, financeResponse] =
+          await Promise.all([
+            apiClient.get('/admin/dashboard'),
+            apiClient.get('/admin/dashboard', {
+              params: {
+                startDate: formatDateParam(todayStart),
+                endDate: formatDateParam(now),
+              },
+            }),
+            apiClient.get('/admin/dashboard', {
+              params: {
+                startDate: formatDateParam(yesterdayStart),
+                endDate: formatDateParam(yesterdayEnd),
+              },
+            }),
+            apiClient.get('/admin/dashboard', {
+              params: {
+                startDate: formatDateParam(startDate),
+                endDate: formatDateParam(now),
+              },
+            }),
+            apiClient.get('/admin/dashboard', {
+              params: {
+                startDate: formatDateParam(previousStart),
+                endDate: formatDateParam(previousEnd),
+              },
+            }),
+            apiClient.get('/admin/finance', {
+              params: {
+                startDate: formatDateParam(startDate),
+                endDate: formatDateParam(now),
+                groupBy: 'day',
+              },
+            }),
+          ]);
+
+        return toRevenueStreamFallback({
+          totalDashboard: unwrapApiData<DashboardSummary>(totalDashboardResponse),
+          todayDashboard: unwrapApiData<DashboardSummary>(todayDashboardResponse),
+          yesterdayDashboard: unwrapApiData<DashboardSummary>(yesterdayDashboardResponse),
+          currentDashboard: unwrapApiData<DashboardSummary>(currentDashboardResponse),
+          previousDashboard: unwrapApiData<DashboardSummary>(previousDashboardResponse),
+          finance: unwrapApiData<FinancePoint[]>(financeResponse),
+        });
+      }
+    },
   });
 
   const filteredTransactions = useMemo(() => {
@@ -242,6 +440,13 @@ export const RevenueStreamingScreen = () => {
             />
           </View>
         </View>
+
+        {data.meta?.isLegacyFallback ? (
+          <View style={styles.errorBanner}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={18} color={theme.colors.warning} />
+            <Text style={styles.errorText}>{data.meta.notice}</Text>
+          </View>
+        ) : null}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kpiScroll}>
           <KPICard
@@ -301,8 +506,8 @@ export const RevenueStreamingScreen = () => {
           <View style={styles.chartArea}>
             <LinearGradient colors={['#f9068030', 'transparent']} style={styles.chartGradient} />
             <View style={styles.chartBars}>
-              {data.trend.map((point) => (
-                <View key={point.label} style={styles.barBlock}>
+              {data.trend.map((point, index) => (
+                <View key={`${point.label}-${index}`} style={styles.barBlock}>
                   <View
                     style={[
                       styles.bar,
@@ -376,7 +581,11 @@ export const RevenueStreamingScreen = () => {
                 />
               ))
             ) : (
-              <Text style={styles.emptyText}>No transactions match this search.</Text>
+              <Text style={styles.emptyText}>
+                {data.meta?.isLegacyFallback
+                  ? 'Live transactions are unavailable on the older admin API.'
+                  : 'No transactions match this search.'}
+              </Text>
             )}
           </View>
         </View>

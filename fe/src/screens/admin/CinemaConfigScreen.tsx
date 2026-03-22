@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, Modal, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, Modal, RefreshControl, TouchableOpacity } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import apiClient from '../../api/client';
 import { normalizeCinema, unwrapApiData } from '../../api/transformers';
 import { Cinema } from '../../types/models';
 import { theme } from '../../constants/theme';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { AdminCinemaStackParamList } from '../../types/navigation';
 
 export const CinemaConfigScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<AdminCinemaStackParamList>>();
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
@@ -52,7 +56,11 @@ export const CinemaConfigScreen = () => {
   };
 
   const renderItem = ({ item }: { item: Cinema }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.88}
+      onPress={() => navigation.navigate('AdminCinemaDetail', { cinemaId: item.id })}
+    >
       <View style={styles.info}>
         <Text style={styles.title}>{item.name}</Text>
         <Text style={styles.subtitle}>{item.location}</Text>
@@ -60,7 +68,7 @@ export const CinemaConfigScreen = () => {
       <View style={styles.activeBadge}>
         <Text style={styles.badgeText}>{item.status}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

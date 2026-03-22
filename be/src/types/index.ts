@@ -426,6 +426,49 @@ export interface IRevenueStreamData {
   topPerformers: IRevenueTopPerformer[];
 }
 
+export interface ICinemaOpsSummary {
+  totalRevenue: number;
+  revenueChange: number;
+  totalBookings: number;
+  averageDailyBookings: number;
+  occupancyRate: number;
+}
+
+export interface ICinemaOpsMovie {
+  movieId: string;
+  title: string;
+  slots: number;
+  posterUrl?: string;
+  isTrending: boolean;
+}
+
+export interface ICinemaOpsDistributionItem {
+  label: string;
+  percentage: number;
+  count: number;
+}
+
+export interface ICinemaOpsDetail {
+  cinema: {
+    id: string;
+    name: string;
+    location: string;
+    address: string;
+    status: CinemaStatus;
+    facilities: string[];
+    screenCount: number;
+    totalSeats: number;
+    screenNames: string[];
+  };
+  summary: ICinemaOpsSummary;
+  trends: {
+    weekly: IRevenueTrendPoint[];
+    monthly: IRevenueTrendPoint[];
+  };
+  showingMovies: ICinemaOpsMovie[];
+  bookingDistribution: ICinemaOpsDistributionItem[];
+}
+
 export interface IFinanceBreakdownItem {
   label: string;
   revenue: number;
