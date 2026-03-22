@@ -641,6 +641,7 @@ export class AdminService {
 
     const screenIds = screens.map((screen: any) => screen._id);
     const totalSeats = screens.reduce((sum: number, screen: any) => sum + Number(screen.totalSeats || 0), 0);
+    const screenSummaries = this.buildCinemaScreenSummaries(screens);
 
     if (!screenIds.length) {
       return {
@@ -654,6 +655,7 @@ export class AdminService {
           screenCount: 0,
           totalSeats,
           screenNames: [],
+          screens: [],
         },
         summary: {
           totalRevenue: 0,
@@ -691,6 +693,7 @@ export class AdminService {
           screenCount: screens.length,
           totalSeats,
           screenNames: screens.map((screen: any) => String(screen.name || '')).filter(Boolean),
+          screens: screenSummaries,
         },
         summary: {
           totalRevenue: 0,
@@ -827,6 +830,7 @@ export class AdminService {
         screenCount: screens.length,
         totalSeats,
         screenNames: screens.map((screen: any) => String(screen.name || '')).filter(Boolean),
+        screens: screenSummaries,
       },
       summary: {
         totalRevenue,
@@ -996,6 +1000,34 @@ export class AdminService {
     if (typeof value === 'number') return String(value);
     if (value.toString) return value.toString();
     return '';
+  }
+
+  private static buildCinemaScreenSummaries(screens: any[]) {
+    return screens.map((screen: any) => ({
+      id: screen._id.toString(),
+      name: String(screen.name || ''),
+      totalSeats: Number(screen.totalSeats || 0),
+      hallType: this.inferHallType(screen),
+      projectionType: screen.projectionType ? String(screen.projectionType) : '',
+      audioSystem: screen.audioSystem ? String(screen.audioSystem) : '',
+      status: screen.status,
+    }));
+  }
+
+  private static inferHallType(screen: any) {
+    const projection = String(screen?.projectionType || '').toUpperCase();
+    const audio = String(screen?.audioSystem || '').toUpperCase();
+    const name = String(screen?.name || '').toUpperCase();
+
+    if (projection.includes('IMAX') || name.includes('IMAX')) {
+      return 'IMAX';
+    }
+
+    if (projection.includes('DOLBY') || audio.includes('DOLBY') || name.includes('VIP') || name.includes('PREMIUM')) {
+      return 'PREMIUM';
+    }
+
+    return 'STANDARD';
   }
 }
 

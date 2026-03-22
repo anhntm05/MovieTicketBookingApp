@@ -35,6 +35,15 @@ type CinemaOpsDetail = {
     screenCount: number;
     totalSeats: number;
     screenNames: string[];
+    screens: Array<{
+      id: string;
+      name: string;
+      totalSeats: number;
+      hallType: string;
+      projectionType?: string;
+      audioSystem?: string;
+      status: 'ACTIVE' | 'MAINTENANCE';
+    }>;
   };
   summary: {
     totalRevenue: number;
@@ -295,7 +304,7 @@ export const AdminCinemaDetailScreen: React.FC<Props> = ({ route, navigation }) 
           <TouchableOpacity
             style={styles.addBtn}
             activeOpacity={0.85}
-            onPress={() => rootNavigation.navigate('Movies')}
+            onPress={() => navigation.navigate('AdminShowtimeCreate', { cinemaId })}
           >
             <MaterialCommunityIcons name="plus" size={16} color="#fff" />
             <Text style={styles.addBtnText}>ADD MOVIE</Text>
@@ -354,6 +363,43 @@ export const AdminCinemaDetailScreen: React.FC<Props> = ({ route, navigation }) 
         <Text style={styles.detailMeta}>
           {data.cinema.totalSeats.toLocaleString()} seats • {data.cinema.facilities.length || 0} listed facilities
         </Text>
+        <View style={styles.hallList}>
+          {data.cinema.screens.length ? (
+            data.cinema.screens.map((screen) => (
+              <View key={screen.id} style={styles.hallRow}>
+                <View style={styles.hallRowCopy}>
+                  <Text style={styles.hallRowName}>{screen.name}</Text>
+                  <Text style={styles.hallRowMeta}>
+                    {screen.totalSeats.toLocaleString()} seats • {screen.hallType}
+                  </Text>
+                  {screen.projectionType || screen.audioSystem ? (
+                    <Text style={styles.hallRowSpecs}>
+                      {[screen.projectionType, screen.audioSystem].filter(Boolean).join(' • ')}
+                    </Text>
+                  ) : null}
+                </View>
+                <View
+                  style={[
+                    styles.hallStatusPill,
+                    screen.status === 'ACTIVE' ? styles.hallStatusActive : styles.hallStatusMaintenance,
+                  ]}
+                >
+                  <Text style={styles.hallStatusText}>{screen.status}</Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyHallText}>No halls configured yet.</Text>
+          )}
+        </View>
+        <TouchableOpacity
+          style={styles.detailButton}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('AdminScreenRoomCreate', { cinemaId })}
+        >
+          <MaterialCommunityIcons name="door-sliding-open" size={18} color="#fff" />
+          <Text style={styles.detailButtonText}>ADD NEW SCREEN ROOM</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -422,6 +468,51 @@ const styles = StyleSheet.create({
   detailTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
   detailText: { color: '#aaa', fontSize: 14, lineHeight: 20 },
   detailMeta: { color: '#f90680', fontSize: 12, marginTop: 12, fontWeight: '700' },
+  hallList: { marginTop: 18, gap: 12 },
+  hallRow: {
+    backgroundColor: '#120d15',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2a1e31',
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  hallRowCopy: { flex: 1 },
+  hallRowName: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  hallRowMeta: { color: '#f90680', fontSize: 12, fontWeight: '700', marginTop: 4 },
+  hallRowSpecs: { color: '#9c92a3', fontSize: 11, marginTop: 4, lineHeight: 16 },
+  hallStatusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  hallStatusActive: {
+    backgroundColor: '#03DAC614',
+    borderColor: '#03DAC650',
+  },
+  hallStatusMaintenance: {
+    backgroundColor: '#F2C94C14',
+    borderColor: '#F2C94C50',
+  },
+  hallStatusText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  emptyHallText: { color: '#8f8794', fontSize: 12 },
+  detailButton: {
+    marginTop: 18,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#251d2a',
+    borderWidth: 1,
+    borderColor: '#3a2a44',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  detailButtonText: { color: '#fff', fontSize: 12, fontWeight: '700', letterSpacing: 0.4 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 12 },
   sectionTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', flex: 1 },
   chartTabs: { flexDirection: 'row', backgroundColor: '#0f0a12', borderRadius: 8, padding: 4 },

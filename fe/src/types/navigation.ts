@@ -39,6 +39,8 @@ export type AdminMovieStackParamList = {
 export type AdminCinemaStackParamList = {
   AdminCinemaCatalog: undefined;
   AdminCinemaDetail: { cinemaId: string };
+  AdminShowtimeCreate: { cinemaId: string };
+  AdminScreenRoomCreate: { cinemaId: string };
 };
 
 export type AdminTabParamList = {

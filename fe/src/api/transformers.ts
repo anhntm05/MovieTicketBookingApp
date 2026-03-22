@@ -161,6 +161,8 @@ export const normalizeScreen = (raw: unknown): Screen => {
     name: String(screen.name || ''),
     status: (upperSnake(screen.status) || 'ACTIVE') as Screen['status'],
     totalSeats: Number(screen.totalSeats || 0),
+    projectionType: String(screen.projectionType || ''),
+    audioSystem: String(screen.audioSystem || ''),
     cinema,
   };
 };

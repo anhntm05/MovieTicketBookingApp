@@ -4,6 +4,8 @@ import { AdminCinemaStackParamList } from '../types/navigation';
 import { AdminLayout } from '../components/AdminLayout';
 import { CinemaConfigScreen } from '../screens/admin/CinemaConfigScreen';
 import { AdminCinemaDetailScreen } from '../screens/admin/AdminCinemaDetailScreen';
+import { AdminShowtimeCreateScreen } from '../screens/admin/AdminShowtimeCreateScreen';
+import { AdminScreenRoomCreateScreen } from '../screens/admin/AdminScreenRoomCreateScreen';
 
 const Stack = createNativeStackNavigator<AdminCinemaStackParamList>();
 
@@ -17,6 +19,8 @@ const withCinemasLayout =
 
 const CinemaCatalogWithLayout = withCinemasLayout(CinemaConfigScreen);
 const CinemaDetailWithLayout = withCinemasLayout(AdminCinemaDetailScreen as React.ComponentType<any>);
+const ShowtimeCreateWithLayout = withCinemasLayout(AdminShowtimeCreateScreen as React.ComponentType<any>);
+const ScreenRoomCreateWithLayout = withCinemasLayout(AdminScreenRoomCreateScreen as React.ComponentType<any>);
 
 export function AdminCinemasStack() {
   return (
@@ -29,6 +33,8 @@ export function AdminCinemasStack() {
     >
       <Stack.Screen name="AdminCinemaCatalog" component={CinemaCatalogWithLayout} />
       <Stack.Screen name="AdminCinemaDetail" component={CinemaDetailWithLayout} />
+      <Stack.Screen name="AdminShowtimeCreate" component={ShowtimeCreateWithLayout} />
+      <Stack.Screen name="AdminScreenRoomCreate" component={ScreenRoomCreateWithLayout} />
     </Stack.Navigator>
   );
 }
