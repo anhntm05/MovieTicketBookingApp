@@ -16,7 +16,7 @@ interface CustomerLayoutProps {
   activeTabOverride?: MainTabName;
 }
 
-const customerTabs: MainTabName[] = ['Home', 'Cinemas', 'Bookings', 'Profile'];
+const customerTabs: MainTabName[] = ['Home', 'Movies', 'Cinemas', 'Bookings', 'Profile'];
 
 const isMainTab = (routeName?: string): routeName is MainTabName =>
   customerTabs.includes(routeName as MainTabName);

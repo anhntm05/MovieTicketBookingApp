@@ -69,6 +69,7 @@ export interface Booking {
   createdAt: string;
   holdExpiresAt?: string;
   seatIds?: string[];
+  seatLabels?: string[];
   showtime?: Showtime;
 }
 

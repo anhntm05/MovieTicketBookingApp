@@ -219,6 +219,7 @@ export const CinemasScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 20,
     flex: 1,
     backgroundColor: theme.colors.background,
   },
@@ -233,12 +234,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
   headerTitle: {
     color: theme.colors.text,
     fontSize: 24,
+    fontWeight: 'bold',
     fontFamily: theme.typography.fontFamilies.bold,
   },
   headerSubtitle: {
