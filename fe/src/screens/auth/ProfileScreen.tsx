@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -28,30 +28,46 @@ const AVATAR_PLACEHOLDER =
 const formatRoleLabel = (role?: string) => (role || 'CUSTOMER').replace(/_/g, ' ').toUpperCase();
 
 export const ProfileScreen = () => {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, updateUser } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   // Fetch Current Profile
   const { data: profile, isLoading } = useQuery<ProfileData>({
     queryKey: ['profile'],
     enabled: isAuthenticated,
-    queryFn: async () => {
-      const profileData = normalizeProfile(unwrapApiData(await apiClient.get('/users/profile')));
-      setFullName(profileData.fullName);
-      return profileData;
-    },
+    queryFn: async () => normalizeProfile(unwrapApiData(await apiClient.get('/users/profile'))),
   });
+
+  useEffect(() => {
+    if (!profile) return;
+    setFullName(profile.fullName);
+    setAvatarUrl(profile.avatarUrl);
+  }, [profile]);
 
   // Update Profile Mutation
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { fullName: string }) => {
-      return apiClient.put('/users/profile', { name: data.fullName });
+    mutationFn: async (data: { fullName: string; avatarUrl: string }) => {
+      const response = await apiClient.put('/users/profile', {
+        name: data.fullName,
+        avatarUrl: data.avatarUrl,
+      });
+
+      return normalizeProfile(unwrapApiData(response));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    onSuccess: async (updatedProfile) => {
+      queryClient.setQueryData(['profile'], updatedProfile);
+      await updateUser({
+        id: updatedProfile.id,
+        email: updatedProfile.email,
+        fullName: updatedProfile.fullName,
+        avatarUrl: updatedProfile.avatarUrl,
+        role: updatedProfile.role as 'CUSTOMER' | 'STAFF' | 'ADMIN',
+        status: updatedProfile.status,
+      });
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully');
     },
@@ -65,7 +81,11 @@ export const ProfileScreen = () => {
       Alert.alert('Error', 'Full name cannot be empty');
       return;
     }
-    updateProfileMutation.mutate({ fullName });
+    if (avatarUrl.trim() && !/^https?:\/\/|^data:/i.test(avatarUrl.trim())) {
+      Alert.alert('Error', 'Profile picture must be a valid image URL');
+      return;
+    }
+    updateProfileMutation.mutate({ fullName: fullName.trim(), avatarUrl: avatarUrl.trim() });
   };
 
   const handleLogout = async () => {
@@ -115,6 +135,8 @@ export const ProfileScreen = () => {
     );
   }
 
+  const avatarSource = avatarUrl.trim() || profile?.avatarUrl || user?.avatarUrl || AVATAR_PLACEHOLDER;
+
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
@@ -135,9 +157,13 @@ export const ProfileScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <Image source={{ uri: AVATAR_PLACEHOLDER }} style={styles.avatar} />
+            <Image source={{ uri: avatarSource }} style={styles.avatar} />
             <View style={styles.badge}>
-              <MaterialCommunityIcons name="check-decagram" size={16} color={theme.colors.white} />
+              <MaterialCommunityIcons
+                name={isEditing ? 'camera-outline' : 'check-decagram'}
+                size={16}
+                color={theme.colors.white}
+              />
             </View>
           </View>
 
@@ -168,6 +194,25 @@ export const ProfileScreen = () => {
               />
             </View>
 
+            <Text style={styles.inputLabel}>Profile Picture URL</Text>
+            <View style={styles.editInputContainer}>
+              <MaterialCommunityIcons
+                name="image-outline"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.editInputIcon}
+              />
+              <TextInput
+                style={styles.editInput}
+                value={avatarUrl}
+                onChangeText={setAvatarUrl}
+                placeholder="https://example.com/avatar.jpg"
+                placeholderTextColor={theme.colors.textSecondary}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
             <View style={styles.editActions}>
               <TouchableOpacity
                 style={[styles.secondaryActionButton, styles.halfAction]}
@@ -175,6 +220,7 @@ export const ProfileScreen = () => {
                 onPress={() => {
                   setIsEditing(false);
                   setFullName(profile?.fullName || '');
+                  setAvatarUrl(profile?.avatarUrl || '');
                 }}
               >
                 <Text style={styles.secondaryActionText}>Cancel</Text>
@@ -195,12 +241,12 @@ export const ProfileScreen = () => {
         ) : (
           <TouchableOpacity style={styles.editButton} activeOpacity={0.9} onPress={() => setIsEditing(true)}>
             <MaterialCommunityIcons
-              name="pencil"
+              name="account-edit-outline"
               size={20}
               color={theme.colors.white}
               style={styles.editIcon}
             />
-            <Text style={styles.editButtonText}>Edit Name</Text>
+            <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         )}
 

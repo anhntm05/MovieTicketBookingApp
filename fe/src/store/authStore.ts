@@ -7,6 +7,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  avatarUrl?: string;
   role: UserRole;
   status: string;
 }
@@ -14,6 +15,7 @@ export interface User {
 type AuthUserInput = Partial<User> & {
   _id?: string;
   name?: string;
+  avatarUrl?: string;
   role?: string;
   status?: string;
 };
@@ -24,6 +26,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean; // Initial auth loading from SecureStore
   setAuth: (token: string, user: AuthUserInput) => Promise<void>;
+  updateUser: (user: AuthUserInput) => Promise<void>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
 }
@@ -46,6 +49,7 @@ const normalizeAuthUser = (user: AuthUserInput): User => ({
   id: user.id || user._id || '',
   email: user.email || '',
   fullName: user.fullName || user.name || '',
+  avatarUrl: user.avatarUrl || '',
   role: normalizeRole(user.role),
   status: user.status?.toUpperCase() || '',
 });
@@ -64,6 +68,21 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ token, user: normalizedUser, isAuthenticated: true });
     } catch (e) {
       console.error('Error saving auth to SecureStore', e);
+    }
+  },
+
+  updateUser: async (user: AuthUserInput) => {
+    try {
+      const normalizedUser = normalizeAuthUser(user);
+      const currentToken = await SecureStore.getItemAsync(TOKEN_KEY);
+      await SecureStore.setItemAsync(USER_KEY, JSON.stringify(normalizedUser));
+      set((state) => ({
+        token: currentToken || state.token,
+        user: normalizedUser,
+        isAuthenticated: Boolean(currentToken || state.token),
+      }));
+    } catch (e) {
+      console.error('Error updating auth user in SecureStore', e);
     }
   },
 

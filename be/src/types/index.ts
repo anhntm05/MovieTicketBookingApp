@@ -21,6 +21,7 @@ export interface IUser {
   email: string;
   password: string;
   phone: string;
+  avatarUrl?: string;
   role: UserRole;
   status: UserStatus;
   createdAt?: Date;
@@ -36,6 +37,7 @@ export interface IUserRequest {
   email: string;
   password: string;
   phone: string;
+  avatarUrl?: string;
 }
 
 export interface ICreateStaffRequest extends IUserRequest {}

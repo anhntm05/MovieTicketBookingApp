@@ -22,7 +22,6 @@ import { CustomerLayout } from '../../components/CustomerLayout';
 
 type Props = NativeStackScreenProps<CustomerStackParamList, 'TicketDetail'>;
 
-const QR_CODE_IMAGE = require('../../../assets/QR-code.jpg');
 const ACCENT = '#f90680';
 const BACKGROUND = '#0f0a12';
 const SURFACE = '#1a141e';
@@ -74,6 +73,9 @@ const getStatusColor = (status: TicketDetail['status']) => {
       return '#fff';
   }
 };
+
+const buildQrCodeUrl = (value: string) =>
+  `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=${encodeURIComponent(value)}`;
 
 export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { bookingId } = route.params;
@@ -129,7 +131,8 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const genres = ticket.movie.genre.slice(0, 2).join(', ') || 'Movie';
   const locationLine = [ticket.schedule.cinemaLocation, ticket.schedule.cinemaAddress]
     .filter(Boolean)
-    .join(' • ');
+    .join(' | ');
+  const hasScannableQr = ticket.paymentStatus === 'COMPLETED' && Boolean(ticket.qrCodeValue);
 
   return (
     <CustomerLayout>
@@ -168,7 +171,7 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               <MaterialCommunityIcons name="clock-outline" size={14} color={ACCENT} />
               <Text style={styles.metaText}>
                 {' '}
-                {ticket.movie.duration}m  •  {genres}
+                {ticket.movie.duration}m  |  {genres}
               </Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
@@ -284,10 +287,20 @@ export const TicketDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
         <View style={styles.qrSection}>
           <View style={styles.qrContainer}>
-            <Image source={QR_CODE_IMAGE} style={styles.qrCode} />
+            {hasScannableQr ? (
+              <Image source={{ uri: buildQrCodeUrl(ticket.qrCodeValue) }} style={styles.qrCode} />
+            ) : (
+              <View style={styles.qrPlaceholder}>
+                <MaterialCommunityIcons name="qrcode-scan" size={42} color={TEXT_SUBTLE} />
+              </View>
+            )}
           </View>
-          <Text style={styles.scanText}>SCAN THIS AT THE ENTRANCE</Text>
-          <Text style={styles.qrIdText}>#{ticket.qrCodeValue}</Text>
+          <Text style={styles.scanText}>
+            {hasScannableQr ? 'SCAN THIS AT THE ENTRANCE' : 'QR CODE IS AVAILABLE AFTER PAYMENT'}
+          </Text>
+          <Text style={styles.qrIdText}>
+            {hasScannableQr ? `ENTRY PASS | ${ticket.bookingCode}` : `BOOKING | ${ticket.bookingCode}`}
+          </Text>
         </View>
 
         <View style={styles.actions}>
@@ -628,6 +641,14 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
   },
+  qrPlaceholder: {
+    width: 120,
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f4f4f4',
+    borderRadius: 12,
+  },
   scanText: {
     color: TEXT_SUBTLE,
     fontSize: 10,
@@ -675,5 +696,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 });
+
 
 

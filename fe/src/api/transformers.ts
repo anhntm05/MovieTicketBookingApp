@@ -33,6 +33,7 @@ export interface ProfileData {
   email: string;
   fullName: string;
   phone: string;
+  avatarUrl: string;
   role: string;
   status: string;
 }
@@ -115,6 +116,7 @@ export const normalizeProfile = (raw: unknown): ProfileData => {
     email: String(profile.email || ''),
     fullName: String(profile.fullName || profile.name || ''),
     phone: String(profile.phone || ''),
+    avatarUrl: resolveMediaUrl(String(profile.avatarUrl || '')),
     role: upperSnake(profile.role),
     status: upperSnake(profile.status),
   };

@@ -71,6 +71,11 @@ export const validateUserUpdate = [
     .trim()
     .matches(/^[0-9\-\+\s]+$/)
     .withMessage('Invalid phone number'),
+  body('avatarUrl')
+    .optional({ values: 'falsy' })
+    .trim()
+    .isURL()
+    .withMessage('Invalid avatar URL'),
 ];
 
 export const validateCreateStaff = [
