@@ -8,7 +8,9 @@ export const config = {
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/movie-ticket-booking',
   jwtSecret: process.env.JWT_SECRET || 'your_jwt_secret_key_here',
   jwtExpiry: process.env.JWT_EXPIRY || '7d',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001',
+  corsOrigin:
+    process.env.CORS_ORIGIN ||
+    'http://localhost:3000,http://localhost:3001,http://localhost:5174',
   logLevel: process.env.LOG_LEVEL || 'debug',
 };
 

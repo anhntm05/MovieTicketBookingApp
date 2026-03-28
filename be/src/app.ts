@@ -28,8 +28,17 @@ export const createApp = (): Express => {
    * Middleware Setup
    */
 
+  const allowedOrigins = Array.from(
+    new Set(
+      config.corsOrigin
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    )
+  );
+
   const corsOptions = {
-    origin: [...config.corsOrigin.split(','), 'http://localhost:3000', 'http://localhost:3001'],
+    origin: allowedOrigins,
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
